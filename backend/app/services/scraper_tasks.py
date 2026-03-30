@@ -367,7 +367,7 @@ async def process_pipeline(pipeline_id: int):
             new_count += 1
         
         if new_count > 0:
-            pipeline.total_leads_found += new_count
+            pipeline.total_leads_found = (pipeline.total_leads_found or 0) + new_count
             pipeline.last_run = datetime.utcnow()
             await session.commit()
             print(f"Pipeline '{pipeline.name}' saved {new_count} new leads.")
