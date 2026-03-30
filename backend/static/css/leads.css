@@ -3,7 +3,7 @@
 /* Filter Bar */
 .filter-bar {
     margin-bottom: 1rem;
-    padding: 0 0.5rem;
+    padding: 0 1rem;
     height: 52px;
     background-color: rgba(255, 255, 255, 0.85);
     backdrop-filter: blur(16px);
@@ -13,13 +13,25 @@
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.02);
     display: flex;
     align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
 }
 
-.filter-row {
+.filter-left, .filter-middle, .filter-right {
     display: flex;
     align-items: center;
-    gap: 0.25rem;
-    width: 100%;
+    gap: 0.5rem;
+}
+
+.filter-middle {
+    flex: 1;
+    justify-content: center;
+}
+
+.action-btn-group {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
 }
 
 .search-container {
@@ -448,8 +460,8 @@
     box-shadow: none;
 }
 
-/* Buttons */
-.btn-export {
+/* Action Buttons */
+.btn-export, .btn-clear {
     width: 2.25rem;
     height: 2.25rem;
     background-color: white;
@@ -461,9 +473,10 @@
     justify-content: center;
     cursor: pointer;
     transition: all 0.2s;
+    flex-shrink: 0;
 }
 
-.btn-export:hover {
+.btn-export:hover, .btn-clear:hover {
     color: var(--brand-primary);
     border-color: var(--brand-primary);
     background-color: var(--brand-bg);

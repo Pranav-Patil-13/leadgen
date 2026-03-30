@@ -11,92 +11,86 @@
 {% block content %}
 <!-- Filters Bar -->
 <div class="filter-bar">
-    <div class="filter-row">
-        <!-- Prominent Search -->
-        <div class="search-container group">
-            <i data-lucide="search" class="search-icon"></i>
-            <input type="text" id="search-leads" name="search" placeholder="Search leads by name or city..."
-                class="search-input"
-                hx-get="/api/leads/" hx-trigger="keyup changed delay:300ms, search" hx-target="#leads-view-container"
-                hx-include="#filter-status, #filter-pipeline, #search-leads, #filter-assignee, #current-view">
+    <!-- LEFT: View Mode Toggle -->
+        <div class="filter-left">
+            <div class="view-toggle">
+                <button id="view-table-btn" class="toggle-btn active" onclick="switchView('table')">
+                    <i data-lucide="list" style="width: 14px; height: 14px;"></i>
+                    List
+                </button>
+                <button id="view-board-btn" class="toggle-btn" onclick="switchView('board')">
+                    <i data-lucide="layout-grid" style="width: 14px; height: 14px;"></i>
+                    Board
+                </button>
+                <input type="hidden" id="current-view" name="view" value="table">
+            </div>
         </div>
 
-        <div class="divider"></div>
-
-        <!-- Filter Chips Group -->
-        <div class="filter-select-group">
-            <!-- Status Dropdown -->
-            <div class="filter-select-wrapper">
-                <select id="filter-status" name="status" class="filter-select"
-                    hx-get="/api/leads/" hx-trigger="change" hx-target="#leads-view-container"
-                    hx-include="#filter-status, #filter-city, #filter-pipeline, #search-leads, #filter-assignee, #current-view"
-                    hx-swap="innerHTML">
-                    <option value="">All Statuses</option>
-                    <option value="New Lead">New Lead</option>
-                    <option value="Contacted">Contacted</option>
-                    <option value="Interested">Interested</option>
-                    <option value="Follow-up">Follow-up</option>
-                    <option value="Closed Deal">Closed Deal</option>
-                    <option value="Rejected">Rejected</option>
-                </select>
-                <i data-lucide="chevron-down" class="filter-select-icon"></i>
-            </div>
-
-
-            <!-- Pipeline Dropdown -->
-            <div class="filter-select-wrapper">
-                <select id="filter-pipeline" name="pipeline_id" class="filter-select"
-                    hx-get="/api/leads/" hx-trigger="change" hx-target="#leads-view-container"
+        <!-- MIDDLE: Central Discovery Tools (Search & Main Filters) -->
+        <div class="filter-middle">
+            <div class="search-container group">
+                <i data-lucide="search" class="search-icon"></i>
+                <input type="text" id="search-leads" name="search" placeholder="Search name or city..."
+                    class="search-input"
+                    hx-get="/api/leads/" hx-trigger="keyup changed delay:300ms, search" hx-target="#leads-view-container"
                     hx-include="#filter-status, #filter-pipeline, #search-leads, #filter-assignee, #current-view">
-                    <option value="">Pipelines</option>
-                </select>
-                <i data-lucide="chevron-down" class="filter-select-icon"></i>
             </div>
 
-            <!-- Assignee Dropdown -->
-            <div class="filter-select-wrapper">
-                <select id="filter-assignee" name="assigned_user_id" class="filter-select"
-                    hx-get="/api/leads/" hx-trigger="change" hx-target="#leads-view-container"
-                    hx-include="#filter-status, #filter-pipeline, #search-leads, #filter-assignee, #current-view">
-                    <option value="">Assignee</option>
-                </select>
-                <i data-lucide="chevron-down" class="filter-select-icon"></i>
+            <div class="filter-select-group">
+                <div class="filter-select-wrapper">
+                    <select id="filter-status" name="status" class="filter-select"
+                        hx-get="/api/leads/" hx-trigger="change" hx-target="#leads-view-container"
+                        hx-include="#filter-status, #filter-pipeline, #search-leads, #filter-assignee, #current-view">
+                        <option value="">All Statuses</option>
+                        <option value="New Lead">New Lead</option>
+                        <option value="Contacted">Contacted</option>
+                        <option value="Interested">Interested</option>
+                        <option value="Follow-up">Follow-up</option>
+                        <option value="Closed Deal">Closed Deal</option>
+                        <option value="Rejected">Rejected</option>
+                    </select>
+                    <i data-lucide="chevron-down" class="filter-select-icon"></i>
+                </div>
+
+                <div class="filter-select-wrapper">
+                    <select id="filter-pipeline" name="pipeline_id" class="filter-select"
+                        hx-get="/api/leads/" hx-trigger="change" hx-target="#leads-view-container"
+                        hx-include="#filter-status, #filter-pipeline, #search-leads, #filter-assignee, #current-view">
+                        <option value="">Pipelines</option>
+                    </select>
+                    <i data-lucide="chevron-down" class="filter-select-icon"></i>
+                </div>
+
+                <div class="filter-select-wrapper">
+                    <select id="filter-assignee" name="assigned_user_id" class="filter-select"
+                        hx-get="/api/leads/" hx-trigger="change" hx-target="#leads-view-container"
+                        hx-include="#filter-status, #filter-pipeline, #search-leads, #filter-assignee, #current-view">
+                        <option value="">Assignee</option>
+                    </select>
+                    <i data-lucide="chevron-down" class="filter-select-icon"></i>
+                </div>
             </div>
-
-            <button onclick="clearAllFilters()" class="btn-export" title="Reset Filters" style="width: 2.75rem; justify-content: center; padding: 0;">
-                <i data-lucide="rotate-ccw" style="width: 14px; height: 14px;"></i>
-            </button>
         </div>
 
-        <div class="divider"></div>
-
-        <!-- View Toggle -->
-        <div class="view-toggle">
-            <button id="view-table-btn" class="toggle-btn active" onclick="switchView('table')">
-                <i data-lucide="list" style="width: 14px; height: 14px;"></i>
-                List
-            </button>
-            <button id="view-board-btn" class="toggle-btn" onclick="switchView('board')">
-                <i data-lucide="layout-grid" style="width: 14px; height: 14px;"></i>
-                Board
-            </button>
-            <input type="hidden" id="current-view" name="view" value="table">
-        </div>
-
-        <div class="divider"></div>
-
-        <!-- Primary Actions -->
-        <div class="filter-select-group">
-            <button onclick="exportToCSV()" class="btn-export" title="Export to CSV">
-                <i data-lucide="download" style="width: 16px; height: 16px;"></i>
-            </button>
-            <button id="add-lead-btn" onclick="openAddLeadModal()" class="btn-new-lead">
-                <i data-lucide="plus" style="width: 16px; height: 16px;"></i>
-                New Lead
-            </button>
+        <!-- RIGHT: Terminal Action Buttons -->
+        <div class="filter-right">
+            <div class="action-btn-group">
+                <button onclick="clearAllFilters()" class="btn-clear" title="Reset Filters">
+                    <i data-lucide="rotate-ccw" style="width: 14px; height: 14px;"></i>
+                </button>
+                <div class="divider"></div>
+                <button onclick="exportToCSV()" class="btn-export" title="Export to CSV">
+                    <i data-lucide="download" style="width: 16px; height: 16px;"></i>
+                </button>
+                <button id="add-lead-btn" onclick="openAddLeadModal()" class="btn-new-lead">
+                    <i data-lucide="plus" style="width: 16px; height: 16px;"></i>
+                    New Lead
+                </button>
+            </div>
         </div>
     </div>
 </div>
+>
 
 <!-- Bulk Actions Bar (Hidden by default) -->
 <div id="bulk-actions-bar"

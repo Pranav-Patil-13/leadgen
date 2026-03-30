@@ -1,6 +1,8 @@
 fastapi
 uvicorn[standard]
-sqlalchemy
+sqlalchemy[asyncio]
+asyncpg
+aiosqlite
 psycopg2-binary
 alembic
 celery
@@ -11,3 +13,5 @@ beautifulsoup4
 requests
 playwright
 python-dotenv
+pyjwt
+passlib[bcrypt]
