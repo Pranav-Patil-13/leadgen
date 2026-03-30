@@ -47,7 +47,7 @@ class LeadPipelineOut(LeadPipelineBase):
     is_active: bool
     created_at: datetime
     last_run: Optional[datetime] = None
-    total_leads_found: int
+    total_leads_found: Optional[int] = 0
 
     class Config:
         from_attributes = True
