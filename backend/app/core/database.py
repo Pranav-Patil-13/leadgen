@@ -10,7 +10,12 @@ load_dotenv()
 #   DATABASE_URL=postgresql+asyncpg://user:pass@localhost:5432/leadgen_crm
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./leadgen.db")
 
-engine = create_async_engine(DATABASE_URL, echo=False)
+# Engine configuration (SSL is required for production cloud databases like Supabase)
+engine = create_async_engine(
+    DATABASE_URL, 
+    echo=False,
+    connect_args={"ssl": True} if DATABASE_URL.startswith("postgresql") else {}
+)
 async_session_factory = sessionmaker(
     bind=engine, class_=AsyncSession, expire_on_commit=False
 )
