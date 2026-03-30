@@ -18,11 +18,14 @@ if DATABASE_URL.startswith("postgresql") and "sslmode=" not in DATABASE_URL:
     sep = "&" if "?" in DATABASE_URL else "?"
     DATABASE_URL += f"{sep}sslmode=require"
 
+from sqlalchemy.pool import NullPool
+
 # Engine configuration (SSL is required for production cloud databases like Supabase)
 engine = create_async_engine(
     DATABASE_URL, 
     echo=False,
-    connect_args={"ssl": True} if DATABASE_URL.startswith("postgresql") else {}
+    connect_args={"ssl": True} if DATABASE_URL.startswith("postgresql") else {},
+    poolclass=NullPool
 )
 async_session_factory = sessionmaker(
     bind=engine, class_=AsyncSession, expire_on_commit=False
