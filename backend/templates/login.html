@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In — LeadGen CRM{% endblock %}
+
+{% block full_content %}
+<div class="h-full w-full flex items-center justify-center p-4 md:p-6">
+    <!-- Horizontal Login Card -->
+    <div
+        class="border-beam-card flex flex-col md:flex-row w-full max-w-4xl bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(34,34,59,0.15)] border border-brand-border/30">
+        <div class="border-beam"></div>
+
+        <!-- Left Section: Brand & Features (Hidden on very small screens) -->
+        <div
+            class="hidden md:flex md:w-1/2 bg-gradient-to-br from-[#22223B] to-[#4A4E69] p-10 text-white flex-col justify-between relative overflow-hidden rounded-l-[2.45rem]">
+            <!-- Decorative circle -->
+            <div class="absolute -top-24 -left-24 w-64 h-64 bg-white/5 rounded-full blur-3xl"></div>
+            <div class="absolute -bottom-24 -right-24 w-64 h-64 bg-brand-primary/20 rounded-full blur-3xl"></div>
+
+            <div class="relative z-10">
+                <div class="flex items-center gap-2 mb-8">
+                    <div
+                        class="w-10 h-10 bg-white/10 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/20">
+                        <i data-lucide="zap" class="w-6 h-6 text-brand-secondary"></i>
+                    </div>
+                    <h1 class="text-2xl font-bold tracking-tight">LeadGen <span class="text-brand-secondary">CRM</span>
+                    </h1>
+                </div>
+
+                <h2 class="text-3xl font-extrabold leading-tight mb-6">
+                    Empowering the Next Generation of <span class="text-brand-secondary">Sales Leaders.</span>
+                </h2>
+
+                <ul class="space-y-5">
+                    <li class="flex items-center gap-4 group">
+                        <div
+                            class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-brand-secondary/20 transition-colors">
+                            <i data-lucide="search" class="w-4 h-4 text-brand-secondary"></i>
+                        </div>
+                        <span
+                            class="text-sm font-medium text-white/80 group-hover:text-white transition-colors">Automated
+                            Lead Discovery Engine</span>
+                    </li>
+                    <li class="flex items-center gap-4 group">
+                        <div
+                            class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-brand-secondary/20 transition-colors">
+                            <i data-lucide="git-branch" class="w-4 h-4 text-brand-secondary"></i>
+                        </div>
+                        <span class="text-sm font-medium text-white/80 group-hover:text-white transition-colors">Visual
+                            Pipeline Management</span>
+                    </li>
+                    <li class="flex items-center gap-4 group">
+                        <div
+                            class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-brand-secondary/20 transition-colors">
+                            <i data-lucide="download" class="w-4 h-4 text-brand-secondary"></i>
+                        </div>
+                        <span
+                            class="text-sm font-medium text-white/80 group-hover:text-white transition-colors">One-Click
+                            CSV Export</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="relative z-10">
+                <p class="text-xs text-white/40 font-medium">© 2026 LeadGen CRM. All rights reserved.</p>
+            </div>
+        </div>
+
+        <!-- Right Section: Login Form -->
+        <div class="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center bg-white rounded-r-[2.45rem]">
+            <div class="mb-8 md:hidden text-center">
+                <h1 class="text-2xl font-bold text-brand-primary">LeadGen CRM</h1>
+            </div>
+
+            <div class="mb-10">
+                <h3 class="text-3xl font-extrabold text-brand-text tracking-tight uppercase">
+                    Welcome <span class="text-brand-primary">Back</span>
+                </h3>
+                <div class="w-12 h-1 bg-brand-primary mt-2 rounded-full"></div>
+            </div>
+
+            {% if error %}
+            <div
+                class="mb-6 p-4 rounded-xl bg-red-50 border border-red-100 text-xs text-red-600 flex items-start gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                <i data-lucide="alert-circle" class="w-4 h-4 flex-shrink-0 mt-0.5"></i>
+                <span class="font-medium">{{ error }}</span>
+            </div>
+            {% endif %}
+
+            <form action="/login" method="POST" class="space-y-5">
+                <div>
+                    <label for="email"
+                        class="block text-xs font-bold uppercase tracking-wider text-brand-text/60 mb-2">Email
+                        Address</label>
+                    <div class="relative">
+                        <i data-lucide="mail" class="absolute left-3 top-3 w-4 h-4 text-brand-secondary/50"></i>
+                        <input type="email" id="email" name="email" required autofocus
+                            class="w-full pl-10 pr-4 py-3 bg-brand-bg/30 border border-brand-border/40 rounded-xl text-sm text-brand-text placeholder-brand-secondary/40 focus:outline-none focus:ring-2 focus:ring-brand-primary/10 focus:border-brand-primary transition-all pb-[0.7rem]"
+                            placeholder="john@example.com">
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <label for="password"
+                            class="block text-xs font-bold uppercase tracking-wider text-brand-text/60">Password</label>
+                        <a href="#"
+                            class="text-[10px] font-bold text-brand-primary/60 hover:text-brand-primary transition-colors uppercase tracking-widest">Forgot?</a>
+                    </div>
+                    <div class="relative">
+                        <i data-lucide="lock" class="absolute left-3 top-3 w-4 h-4 text-brand-secondary/50"></i>
+                        <input type="password" id="password" name="password" required
+                            class="w-full pl-10 pr-4 py-3 bg-brand-bg/30 border border-brand-border/40 rounded-xl text-sm text-brand-text placeholder-brand-secondary/40 focus:outline-none focus:ring-2 focus:ring-brand-primary/10 focus:border-brand-primary transition-all pb-[0.7rem]"
+                            placeholder="••••••••">
+                    </div>
+                </div>
+
+                <div class="pt-2">
+                    <button type="submit"
+                        class="w-full btn-primary justify-center py-3.5 rounded-xl shadow-lg shadow-brand-primary/20 font-bold tracking-wide text-sm h-12">
+                        Sign In
+                    </button>
+                </div>
+            </form>
+
+            <div class="mt-10 text-center">
+                <p class="text-sm text-brand-secondary">
+                    Don't have an account?
+                    <a href="/register"
+                        class="font-bold text-brand-primary hover:text-brand-primary/80 transition-colors ml-1">Create
+                        Account</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock full_content %}

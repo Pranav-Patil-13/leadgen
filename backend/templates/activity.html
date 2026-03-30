@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Activity — LeadGen CRM{% endblock %}
+{% block page_title %}Activity Log{% endblock %}
+{% block page_subtitle %}Recent system and lead activities{% endblock %}
+
+{% block content %}
+<div class="card" style="padding: 0; overflow: hidden;">
+    <div id="activity-feed" hx-get="/api/leads/activities" hx-trigger="load" hx-swap="innerHTML">
+        <div class="p-12 text-center text-brand-secondary">
+            <i data-lucide="loader-2" style="width: 32px; height: 32px; margin: 0 auto 0.5rem auto; display: block;"
+                class="animate-spin"></i>
+            <p>Loading activity log...</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    lucide.createIcons();
+</script>
+{% endblock %}

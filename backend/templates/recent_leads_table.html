@@ -1,0 +1,70 @@
+{% for lead in leads %}
+<tr class="group border-b border-brand-bg hover:bg-white transition-all cursor-pointer"
+    onclick="window.location.href='/leads'">
+    <td class="py-4 px-2">
+        <div class="flex items-center gap-3">
+            <div
+                class="w-9 h-9 min-w-[36px] rounded-xl bg-brand-bg flex items-center justify-center text-brand-primary font-bold text-xs uppercase shadow-sm group-hover:bg-brand-primary group-hover:text-white transition-colors">
+                {{ lead.company_name[:2] }}
+            </div>
+            <div>
+                <div class="text-sm font-semibold text-brand-text truncate max-w-[180px]">{{ lead.company_name }}</div>
+                <div class="text-[10px] text-brand-secondary flex items-center gap-1 mt-0.5">
+                    <i data-lucide="clock" class="w-3 h-3"></i>
+                    Just now
+                </div>
+            </div>
+        </div>
+    </td>
+    <td class="py-4 px-2">
+        <div class="flex flex-col">
+            <span class="text-xs font-medium text-brand-text">{{ lead.city or 'General' }}</span>
+            <span class="text-[10px] text-brand-secondary">Primary Region</span>
+        </div>
+    </td>
+    <td class="py-4 px-2">
+        <div class="flex flex-col">
+            <div class="flex items-center gap-1.5">
+                <span class="text-sm font-black 
+                    {% if lead.ai_score_label == 'High' %}text-emerald-600
+                    {% elif lead.ai_score_label == 'Medium' %}text-amber-600
+                    {% else %}text-rose-600{% endif %}">
+                    {{ lead.ai_score }}%
+                </span>
+                <div class="w-1.5 h-1.5 rounded-full 
+                    {% if lead.ai_score_label == 'High' %}bg-emerald-500
+                    {% elif lead.ai_score_label == 'Medium' %}bg-amber-500
+                    {% else %}bg-rose-500{% endif %}"></div>
+            </div>
+            <span class="text-[10px] font-bold text-brand-secondary uppercase tracking-tighter">{{ lead.ai_score_label
+                }} Match</span>
+        </div>
+    </td>
+    <td class="py-4 px-2 text-right">
+        <span class="inline-flex px-2.5 py-1 rounded-lg text-[10px] font-bold tracking-tight uppercase border
+            {% if lead.status == 'New Lead' %}bg-blue-50 text-blue-600 border-blue-100
+            {% elif lead.status == 'Contacted' %}bg-yellow-50 text-yellow-600 border-yellow-100
+            {% elif lead.status == 'Interested' %}bg-green-50 text-green-600 border-green-100
+            {% elif lead.status == 'Closed Deal' %}bg-emerald-50 text-emerald-600 border-emerald-100
+            {% elif lead.status == 'Rejected' %}bg-red-50 text-red-600 border-red-100
+            {% else %}bg-gray-50 text-brand-secondary border-brand-bg{% endif %}">
+            {{ lead.status }}
+        </span>
+    </td>
+</tr>
+{% endfor %}
+
+{% if not leads %}
+<tr>
+    <td colspan="4" class="py-12 text-center">
+        <div class="flex flex-col items-center gap-2 opacity-40">
+            <i data-lucide="ghost" class="w-8 h-8"></i>
+            <span class="text-xs font-medium">Your feed is empty. Run a pipeline!</span>
+        </div>
+    </td>
+</tr>
+{% endif %}
+
+<script>
+    lucide.createIcons();
+</script>

@@ -1,0 +1,316 @@
+{% extends "base.html" %}
+
+{% block title %}Calendar & Tasks — LeadGen CRM{% endblock %}
+{% block page_title %}Calendar & Tasks{% endblock %}
+{% block page_subtitle %}Manage your daily schedule and upcoming follow-ups{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+    <!-- Today & Task List (4 Columns) -->
+    <div class="lg:col-span-4 space-y-6">
+        <!-- Today Card -->
+        <div
+            class="bg-brand-primary rounded-[2rem] p-8 text-white relative overflow-hidden shadow-2xl shadow-brand-primary/20">
+            <div class="absolute -right-4 -top-4 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
+            <div class="relative z-10">
+                <span class="text-[11px] font-black uppercase tracking-[0.2em] text-white/60">Today</span>
+                <h3 class="text-5xl font-black mt-2 mb-1" id="current-date-header">...</h3>
+                <p class="text-xs font-bold text-white/80" id="current-day-label">...</p>
+            </div>
+
+            <div class="mt-10 pt-8 border-t border-white/10 flex items-center justify-between">
+                <div>
+                    <span class="text-[10px] font-black uppercase tracking-widest text-white/40">Pending Tasks</span>
+                    <div class="text-3xl font-black mt-1" id="pending-count">0</div>
+                </div>
+                <button onclick="openAddTaskModal()"
+                    class="w-14 h-14 bg-white text-brand-primary rounded-2xl flex items-center justify-center shadow-xl shadow-black/10 hover:scale-105 transition-all">
+                    <i data-lucide="plus" class="w-8 h-8"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Task Queue -->
+        <div class="bg-white rounded-[2rem] border border-brand-border/40 overflow-hidden shadow-sm">
+            <div class="p-6 border-b border-brand-border/20 flex items-center justify-between bg-brand-bg/10">
+                <h4 class="text-[10px] font-black uppercase tracking-[0.2em] text-brand-secondary">Task Queue</h4>
+                <div class="flex gap-1.5">
+                    <button
+                        class="text-[10px] font-bold text-brand-primary px-3 py-1.5 bg-brand-bg/50 rounded-lg">Active</button>
+                    <button class="text-[10px] font-bold text-brand-secondary/40 px-3 py-1.5">Done</button>
+                </div>
+            </div>
+            <div id="task-list-container" class="p-2 space-y-1 min-h-[400px]" hx-get="/api/tasks/"
+                hx-trigger="load, taskUpdated from:body" hx-swap="innerHTML">
+                <div class="p-10 text-center opacity-30">
+                    <i data-lucide="loader-2" class="w-8 h-8 animate-spin mx-auto mb-3"></i>
+                    <p class="text-[10px] font-black uppercase tracking-widest">Initialising Queue...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Calendar View (8 Columns) -->
+    <div class="lg:col-span-8">
+        <div class="bg-white rounded-[2rem] border border-brand-border/40 p-8 shadow-sm flex flex-col min-h-[800px]">
+            <div class="flex items-center justify-between mb-10">
+                <div class="flex items-center gap-4">
+                    <button onclick="changeMonth(-1)"
+                        class="w-10 h-10 flex items-center justify-center hover:bg-brand-bg rounded-xl transition-all"><i
+                            data-lucide="chevron-left" class="w-5 h-5 text-brand-secondary"></i></button>
+                    <h3 class="text-2xl font-black text-brand-text min-w-[200px] text-center" id="calendar-month-year">
+                        March 2026</h3>
+                    <button onclick="changeMonth(1)"
+                        class="w-10 h-10 flex items-center justify-center hover:bg-brand-bg rounded-xl transition-all"><i
+                            data-lucide="chevron-right" class="w-5 h-5 text-brand-secondary"></i></button>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span
+                        class="flex items-center gap-2 text-[10px] font-black uppercase text-emerald-600 bg-emerald-50 px-4 py-2 rounded-xl border border-emerald-100/50">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Live
+                    </span>
+                    <button
+                        class="px-5 py-2.5 bg-brand-bg text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-white border border-brand-border/30 transition-all">Month</button>
+                </div>
+            </div>
+
+            <!-- Calendar Grid Container -->
+            <div class="flex-1 flex flex-col">
+                <!-- Header -->
+                <div class="gap-px mb-1" style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr));">
+                    {% for day in ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] %}
+                    <div
+                        class="py-4 text-center text-[11px] font-black uppercase text-brand-secondary/40 tracking-[0.2em]">
+                        {{ day }}</div>
+                    {% endfor %}
+                </div>
+
+                <!-- Main Grid -->
+                <div class="flex-1 gap-px border border-brand-border/20 rounded-[1.5rem] overflow-hidden bg-brand-border/10"
+                    id="calendar-grid" style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr));">
+                    <!-- Days Generated by JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Task Modal -->
+<div id="add-task-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-brand-text/60 backdrop-blur-md" onclick="closeAddTaskModal()"></div>
+    <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md z-10 p-10 border border-brand-border/10">
+        <div class="flex justify-between items-center mb-8">
+            <h3 class="text-2xl font-black text-brand-text">Create Task</h3>
+            <button onclick="closeAddTaskModal()"
+                class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-rose-50 text-brand-secondary hover:text-rose-500 transition-all">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+        <form id="task-form" onsubmit="saveTask(event)" class="space-y-6">
+            <div>
+                <label
+                    class="block text-[10px] font-black text-brand-secondary uppercase tracking-widest mb-2 ml-1">Title</label>
+                <input type="text" name="title" required placeholder="Follow up with client..."
+                    class="w-full h-14 px-5 bg-brand-bg/20 border border-brand-border/20 rounded-2xl outline-none font-bold text-brand-text focus:ring-4 focus:ring-brand-primary/10 transition-all text-sm">
+            </div>
+            <div>
+                <label class="block text-[10px] font-black text-brand-secondary uppercase tracking-widest mb-2 ml-1">Due
+                    Date & Time</label>
+                <input type="datetime-local" name="due_date" required
+                    class="w-full h-14 px-5 bg-brand-bg/20 border border-brand-border/20 rounded-2xl outline-none font-bold text-brand-text focus:ring-4 focus:ring-brand-primary/10 transition-all text-sm">
+            </div>
+            <div>
+                <label
+                    class="block text-[10px] font-black text-brand-secondary uppercase tracking-widest mb-2 ml-1">Link
+                    to Lead (Optional)</label>
+                <div class="relative">
+                    <select name="lead_id" id="task-lead-select"
+                        class="w-full h-14 px-5 bg-brand-bg/20 border border-brand-border/20 rounded-2xl outline-none font-bold text-brand-text focus:ring-4 focus:ring-brand-primary/10 transition-all text-sm appearance-none">
+                        <option value="">General Task</option>
+                    </select>
+                    <i data-lucide="chevron-down"
+                        class="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-secondary opacity-40 pointer-events-none"></i>
+                </div>
+            </div>
+            <button type="submit"
+                class="w-full h-16 bg-brand-primary text-white rounded-2xl font-black uppercase tracking-widest shadow-2xl shadow-brand-primary/20 hover:scale-[1.02] transition-all mt-4 border-b-4 border-brand-text/20">
+                Confirm Task
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    let currentMonth = new Date().getMonth();
+    let currentYear = new Date().getFullYear();
+
+    function updateTodayInfo() {
+        const now = new Date();
+        const header = document.getElementById('current-date-header');
+        const label = document.getElementById('current-day-label');
+
+        if (header) header.textContent = now.getDate().toString().padStart(2, '0');
+        if (label) label.textContent = now.toLocaleString('en-US', { month: 'long', weekday: 'long', year: 'numeric' });
+    }
+
+    function openAddTaskModal() {
+        document.getElementById('add-task-modal').classList.remove('hidden');
+        fetch('/api/leads/')
+            .then(r => r.json())
+            .then(leads => {
+                const select = document.getElementById('task-lead-select');
+                if (select) {
+                    const current = select.value;
+                    select.innerHTML = '<option value="">General Task</option>' + leads.map(l =>
+                        `<option value="${l.id}" ${current == l.id ? 'selected' : ''}>${l.company_name}</option>`
+                    ).join('');
+                }
+            });
+
+        const now = new Date();
+        const tzOffset = now.getTimezoneOffset() * 60000;
+        const localISOTime = new Date(now.getTime() - tzOffset).toISOString().slice(0, 16);
+        const dateInput = document.querySelector('input[name="due_date"]');
+        if (dateInput) dateInput.value = localISOTime;
+        if (window.lucide) lucide.createIcons();
+    }
+
+    function closeAddTaskModal() {
+        document.getElementById('add-task-modal').classList.add('hidden');
+    }
+
+    async function saveTask(e) {
+        e.preventDefault();
+        const form = e.target;
+        const data = {
+            title: form.title.value,
+            due_date: new Date(form.due_date.value).toISOString(),
+            lead_id: form.lead_id.value ? parseInt(form.lead_id.value) : null
+        };
+
+        try {
+            const res = await fetch('/api/tasks/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            if (!res.ok) throw new Error("Failed to create task");
+
+            closeAddTaskModal();
+            updateCalendar();
+            htmx.trigger('#task-list-container', 'taskUpdated');
+        } catch (err) { alert(err.message); }
+    }
+
+    function changeMonth(delta) {
+        currentMonth += delta;
+        if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+        if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+        updateCalendar();
+    }
+
+    async function updateCalendar() {
+        const grid = document.getElementById('calendar-grid');
+        const monthLabel = document.getElementById('calendar-month-year');
+        if (!grid || !monthLabel) return;
+
+        monthLabel.textContent = new Date(currentYear, currentMonth).toLocaleString('en-US', { month: 'long', year: 'numeric' });
+
+        const firstDay = new Date(currentYear, currentMonth, 1);
+        const lastDay = new Date(currentYear, currentMonth + 1, 0);
+
+        try {
+            const res = await fetch(`/api/tasks/?start_date=${firstDay.toISOString().split('T')[0]}&end_date=${lastDay.toISOString().split('T')[0]}`);
+            const tasks = await res.json();
+
+            grid.innerHTML = '';
+
+            let paddingDays = firstDay.getDay() - 1;
+            if (paddingDays < 0) paddingDays = 6;
+
+            for (let i = 0; i < paddingDays; i++) {
+                const div = document.createElement('div');
+                div.className = 'bg-brand-bg/10 min-h-[120px]';
+                grid.appendChild(div);
+            }
+
+            const daysInMonth = lastDay.getDate();
+            const today = new Date();
+            const isCurrentMonth = today.getMonth() === currentMonth && today.getFullYear() === currentYear;
+
+            for (let d = 1; d <= daysInMonth; d++) {
+                const div = document.createElement('div');
+                const isToday = isCurrentMonth && today.getDate() === d;
+
+                div.className = `bg-white min-h-[120px] p-4 flex flex-col group transition-colors hover:bg-brand-bg/20 ${isToday ? 'relative shadow-[inset_0_0_0_2px_#4A4E69]' : ''}`;
+
+                div.innerHTML = `
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-[11px] font-black ${isToday ? 'text-brand-primary' : 'text-brand-secondary/30'}">${d}</span>
+                        ${isToday ? '<span class="text-[8px] font-black uppercase text-brand-primary tracking-widest">Today</span>' : ''}
+                    </div>
+                    <div class="flex-1 space-y-1.5 overflow-y-auto max-h-[80px] custom-scrollbar">
+                        ${tasks.filter(t => new Date(t.due_date).getDate() === d).map(t => `
+                            <div class="text-[9px] font-bold p-1.5 rounded-lg bg-white border border-brand-border/20 shadow-sm truncate text-brand-text flex items-center gap-2 group/task">
+                                 <span class="w-1.5 h-1.5 rounded-full shrink-0 ${t.is_completed ? 'bg-emerald-500' : 'bg-orange-500 animate-pulse'}"></span>
+                                 <span class="${t.is_completed ? 'line-through opacity-40' : ''}">${t.title}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                grid.appendChild(div);
+            }
+
+            const pCount = document.getElementById('pending-count');
+            if (pCount) pCount.textContent = tasks.filter(t => !t.is_completed).length;
+        } catch (e) {
+            console.error("Calendar update failed", e);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        updateTodayInfo();
+        updateCalendar();
+
+        document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+        const nav = document.getElementById('nav-calendar');
+        if (nav) nav.classList.add('active');
+        if (window.lucide) lucide.createIcons();
+    });
+
+    function toggleTask(taskId, completed) {
+        fetch(`/api/tasks/${taskId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ is_completed: completed })
+        }).then(() => {
+            updateCalendar();
+            htmx.trigger('#task-list-container', 'taskUpdated');
+        });
+    }
+
+    function deleteTask(taskId) {
+        if (!confirm('Permanently delete this task?')) return;
+        fetch(`/api/tasks/${taskId}`, { method: 'DELETE' })
+            .then(() => {
+                updateCalendar();
+                htmx.trigger('#task-list-container', 'taskUpdated');
+            });
+    }
+</script>
+
+<style>
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 3px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.05);
+        border-radius: 10px;
+    }
+
+    .custom-scrollbar:hover::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}

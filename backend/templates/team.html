@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}Team Management — LeadGen CRM{% endblock %}
+{% block page_title %}Team Management{% endblock %}
+{% block page_subtitle %}Manage your team and lead assignment permissions{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div class="card p-6 shadow-sm border-brand-border/30">
+        <div class="flex items-center gap-4">
+            <div class="p-3 bg-brand-primary/10 rounded-xl text-brand-primary">
+                <i data-lucide="users" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <p class="text-xs font-bold text-brand-secondary uppercase tracking-wider">Total Members</p>
+                <h3 class="text-2xl font-black text-brand-text mt-1" id="total-members">-</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="card p-6 shadow-sm border-brand-border/30">
+        <div class="flex items-center gap-4">
+            <div class="p-3 bg-green-500/10 rounded-xl text-green-600">
+                <i data-lucide="user-check" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <p class="text-xs font-bold text-brand-secondary uppercase tracking-wider">Active Assignees</p>
+                <h3 class="text-2xl font-black text-brand-text mt-1" id="active-members">-</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="card p-6 shadow-sm border-brand-border/30">
+        <div class="flex items-center gap-4">
+            <div class="p-3 bg-brand-secondary/10 rounded-xl text-brand-secondary">
+                <i data-lucide="mail" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <p class="text-xs font-bold text-brand-secondary uppercase tracking-wider">Pending Invites</p>
+                <h3 class="text-2xl font-black text-brand-text mt-1">0</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm border-brand-border/20 overflow-hidden">
+    <div class="p-6 border-b border-brand-border/20 flex justify-between items-center">
+        <h3 class="font-bold text-lg text-brand-text">Team Members</h3>
+        <button class="btn-primary rounded-xl px-4 py-2 flex items-center gap-2 text-sm" onclick="openInviteModal()">
+            <i data-lucide="user-plus" class="w-4 h-4"></i>
+            Invite Member
+        </button>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="bg-brand-bg/30">
+                    <th class="text-left py-4 px-6 text-xs font-black text-brand-secondary uppercase tracking-widest">
+                        Member</th>
+                    <th class="text-left py-4 px-6 text-xs font-black text-brand-secondary uppercase tracking-widest">
+                        Email</th>
+                    <th class="text-left py-4 px-6 text-xs font-black text-brand-secondary uppercase tracking-widest">
+                        Role</th>
+                    <th class="text-left py-4 px-6 text-xs font-black text-brand-secondary uppercase tracking-widest">
+                        Status</th>
+                    <th class="text-left py-4 px-6 text-xs font-black text-brand-secondary uppercase tracking-widest">
+                        Joined</th>
+                </tr>
+            </thead>
+            <tbody id="team-table-body" class="divide-y divide-brand-border/10">
+                <!-- Loaded via JS -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Invite Modal -->
+<div id="invite-modal" class="fixed inset-0 z-[100] hidden">
+    <div class="absolute inset-0 bg-brand-text/40 backdrop-blur-sm" onclick="closeInviteModal()"></div>
+    <div
+        class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md p-6 bg-white rounded-2xl shadow-2xl">
+        <h3 class="text-xl font-black text-brand-text mb-2">Invite Team Member</h3>
+        <p class="text-sm text-brand-secondary mb-6">Send an invite to join your LeadGen workspace.</p>
+
+        <form id="invite-form" class="space-y-4">
+            <div>
+                <label class="block text-xs font-bold text-brand-secondary uppercase mb-1.5 ml-1">Full Name</label>
+                <input type="text" name="full_name" required placeholder="John Doe"
+                    class="w-full px-4 py-3 bg-brand-bg/30 border border-brand-border/40 rounded-xl focus:ring-2 focus:ring-brand-primary/10 outline-none transition-all">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-brand-secondary uppercase mb-1.5 ml-1">Email Address</label>
+                <input type="email" name="email" required placeholder="john@example.com"
+                    class="w-full px-4 py-3 bg-brand-bg/30 border border-brand-border/40 rounded-xl focus:ring-2 focus:ring-brand-primary/10 outline-none transition-all">
+            </div>
+            <div class="flex gap-3 pt-4">
+                <button type="button"
+                    class="flex-1 py-3 px-4 border border-brand-border rounded-xl text-sm font-bold text-brand-secondary hover:bg-brand-bg transition-all"
+                    onclick="closeInviteModal()">Cancel</button>
+                <button type="submit"
+                    class="flex-1 py-3 px-4 bg-brand-primary text-white rounded-xl text-sm font-bold shadow-lg shadow-brand-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all">Send
+                    Invite</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function loadTeam() {
+        fetch('/api/users/')
+            .then(res => res.json())
+            .then(users => {
+                document.getElementById('total-members').innerText = users.length;
+                document.getElementById('active-members').innerText = users.filter(u => u.is_active).length;
+
+                const tbody = document.getElementById('team-table-body');
+                tbody.innerHTML = users.map(user => `
+                    <tr class="hover:bg-brand-bg/20 transition-colors">
+                        <td class="py-4 px-6">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-brand-primary text-white flex items-center justify-center font-bold text-xs uppercase">
+                                    ${(user.full_name || user.email)[0]}
+                                </div>
+                                <span class="font-bold text-brand-text">${user.full_name || 'No Name'}</span>
+                            </div>
+                        </td>
+                        <td class="py-4 px-6 text-brand-secondary font-medium">${user.email}</td>
+                        <td class="py-4 px-6">
+                            <span class="px-2 py-1 bg-brand-bg text-brand-primary text-[10px] font-black uppercase rounded-md tracking-wider">Agent</span>
+                        </td>
+                        <td class="py-4 px-6">
+                            <div class="flex items-center gap-2">
+                                <div class="w-2 h-2 rounded-full ${user.is_active ? 'bg-green-500' : 'bg-gray-300'}"></div>
+                                <span class="text-xs font-bold ${user.is_active ? 'text-green-600' : 'text-gray-400'}">${user.is_active ? 'Active' : 'Inactive'}</span>
+                            </div>
+                        </td>
+                        <td class="py-4 px-6 text-brand-secondary text-xs">${new Date(user.created_at).toLocaleDateString()}</td>
+                    </tr>
+                `).join('');
+
+                if (window.lucide) lucide.createIcons();
+            });
+    }
+
+    function openInviteModal() {
+        document.getElementById('invite-modal').classList.remove('hidden');
+    }
+
+    function closeInviteModal() {
+        document.getElementById('invite-modal').classList.add('hidden');
+        document.getElementById('invite-form').reset();
+    }
+
+    document.getElementById('invite-form').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const btn = this.querySelector('button[type="submit"]');
+        const originalText = btn.innerText;
+        btn.innerText = 'Inviting...';
+        btn.disabled = true;
+
+        const formData = new FormData(this);
+        const data = Object.fromEntries(formData.entries());
+        // Auto-generate a random secure password for the invitee (in reality, would send sign-up link)
+        data.password = Math.random().toString(36).slice(-8) + "Aa1!";
+
+        fetch('/api/users/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+            .then(res => {
+                if (!res.ok) throw new Error('Failed to invite user');
+                return res.json();
+            })
+            .then(result => {
+                closeInviteModal();
+                loadTeam(); // refresh the table
+            })
+            .catch(err => {
+                alert(err.message);
+            })
+            .finally(() => {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            });
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadTeam();
+
+        // Active Nav
+        document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+        const navTeam = document.getElementById('nav-team');
+        if (navTeam) navTeam.classList.add('active');
+    });
+</script>
+{% endblock %}

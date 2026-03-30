@@ -1,0 +1,494 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard — LeadGen CRM{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_subtitle %}Overview of your lead generation pipeline{% endblock %}
+
+{% block content %}
+<!-- KPI Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 kpi-grid">
+    <!-- New Leads Today -->
+    <div class="card hover:shadow-md cursor-pointer transition-all hover:-translate-y-1">
+        <div class="flex items-center justify-between mb-3">
+            <span class="text-sm text-brand-secondary font-medium">New Leads Today</span>
+            <div class="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
+                <i data-lucide="trending-up" class="w-5 h-5 text-green-600"></i>
+            </div>
+        </div>
+        <div id="kpi-new-today">
+            <p class="text-3xl font-bold text-brand-text">—</p>
+            <p class="text-xs text-brand-secondary mt-1">discovered automatically</p>
+        </div>
+    </div>
+
+    <!-- Total Leads -->
+    <div class="card hover:shadow-md cursor-pointer transition-all hover:-translate-y-1">
+        <div class="flex items-center justify-between mb-3">
+            <span class="text-sm text-brand-secondary font-medium">Total Leads</span>
+            <div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
+                <i data-lucide="users" class="w-5 h-5 text-blue-600"></i>
+            </div>
+        </div>
+        <div id="kpi-total">
+            <p class="text-3xl font-bold text-brand-text">—</p>
+            <p class="text-xs text-brand-secondary mt-1">in your CRM</p>
+        </div>
+    </div>
+
+    <!-- High Potential Leads -->
+    <div class="card hover:shadow-md cursor-pointer transition-all hover:-translate-y-1">
+        <div class="flex items-center justify-between mb-3">
+            <span class="text-sm text-brand-secondary font-medium">High Potential</span>
+            <div class="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center">
+                <i data-lucide="zap" class="w-5 h-5 text-indigo-600"></i>
+            </div>
+        </div>
+        <div>
+            <p class="text-3xl font-bold text-brand-text" id="kpi-high-potential">—</p>
+            <p class="text-xs text-brand-secondary mt-1">AI-scored opportunities</p>
+        </div>
+    </div>
+
+    <!-- Conversion Rate -->
+    <div class="card hover:shadow-md cursor-pointer transition-all hover:-translate-y-1">
+        <div class="flex items-center justify-between mb-3">
+            <span class="text-sm text-brand-secondary font-medium">Closed Deals</span>
+            <div class="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center">
+                <i data-lucide="trophy" class="w-5 h-5 text-amber-600"></i>
+            </div>
+        </div>
+        <div>
+            <p class="text-3xl font-bold text-brand-text" id="kpi-closed">—</p>
+            <p class="text-xs text-brand-secondary mt-1">this month</p>
+        </div>
+    </div>
+</div>
+
+<!-- Content Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+    <!-- Main Left Column -->
+    <div class="lg:col-span-8 order-2 lg:order-1 flex flex-col gap-6">
+
+        <!-- Interactive Analytics: Discovery Timeline -->
+        <div class="card flex flex-col">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h3 class="text-sm font-semibold text-brand-text">Discovery Timeline</h3>
+                    <p class="text-xs text-brand-secondary">Leads found over the last 14 days</p>
+                </div>
+                <i data-lucide="line-chart" class="w-4 h-4 text-brand-secondary"></i>
+            </div>
+            <div class="w-full h-64 relative">
+                <canvas id="discoveryChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Recent Discovery Feed -->
+        <div class="card flex flex-col">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-sm font-semibold text-brand-text">Recent Discoveries</h3>
+                    <p class="text-xs text-brand-secondary">Fresh leads from your pipelines</p>
+                </div>
+                <a href="/leads"
+                    class="text-xs text-brand-primary font-semibold hover:underline bg-brand-bg px-3 py-1.5 rounded-full transition-colors">View
+                    All Leads</a>
+            </div>
+
+            <div class="flex-1 overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-xs text-brand-secondary uppercase tracking-wider border-b border-brand-border">
+                            <th class="text-left py-3 px-2 font-medium">Lead Details</th>
+                            <th class="text-left py-3 px-2 font-medium">Location</th>
+                            <th class="text-left py-3 px-2 font-medium">AI Potential</th>
+                            <th class="text-right py-3 px-2 font-medium">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recent-leads-body" hx-get="/api/leads/?limit=4&compact=true" hx-trigger="load"
+                        hx-swap="innerHTML">
+                        <tr>
+                            <td colspan="4" class="py-12 text-center">
+                                <i data-lucide="loader-2"
+                                    class="w-6 h-6 animate-spin mx-auto text-brand-secondary mb-2"></i>
+                                <span class="text-sm text-brand-secondary">Syncing newest leads...</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Right Column (Stats & Tasks) -->
+    <div class="lg:col-span-4 flex flex-col gap-6 order-1 lg:order-2">
+
+        <!-- Today's Schedule -->
+        <div
+            class="bg-brand-primary text-white p-8 rounded-[2rem] relative overflow-hidden shadow-xl shadow-brand-primary/20">
+            <div class="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
+            <div class="relative z-10">
+                <div class="flex items-center justify-between mb-6">
+                    <span class="text-[10px] font-black uppercase tracking-widest text-white/50">Today's Schedule</span>
+                    <a href="/calendar"
+                        class="w-8 h-8 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-xl transition-all">
+                        <i data-lucide="external-link" class="w-4 h-4"></i>
+                    </a>
+                </div>
+                <div id="dash-task-list" hx-get="/api/tasks/?start_date={{ today }}&end_date={{ today }}"
+                    hx-trigger="load" hx-swap="innerHTML">
+                    <div class="py-10 text-center opacity-40">
+                        <i data-lucide="loader-2" class="w-6 h-6 animate-spin mx-auto"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quality Breakdown -->
+        <div class="card">
+            <div class="flex items-center justify-between mb-2">
+                <div>
+                    <h3 class="text-sm font-semibold text-brand-text">Quality Distribution</h3>
+                    <p class="text-xs text-brand-secondary">AI Potential Scores</p>
+                </div>
+                <i data-lucide="pie-chart" class="w-4 h-4 text-brand-secondary"></i>
+            </div>
+            <div class="w-full relative py-4" style="height: 180px;">
+                <canvas id="qualityChart"></canvas>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-sm font-semibold text-brand-text">Pipeline Distribution</h3>
+                    <p class="text-xs text-brand-secondary">Lead volume by stage</p>
+                </div>
+                <i data-lucide="bar-chart-3" class="w-4 h-4 text-brand-secondary"></i>
+            </div>
+
+            <div class="space-y-6" id="stage-breakdown">
+                <!-- New Lead -->
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="font-medium text-brand-text flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                            New Lead
+                        </span>
+                        <span class="font-bold text-brand-text" id="stage-new-lead">0</span>
+                    </div>
+                    <div class="w-full bg-blue-50 h-1.5 rounded-full overflow-hidden">
+                        <div id="bar-new-lead" class="bg-blue-500 h-full transition-all duration-500" style="width: 0%">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contacted -->
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="font-medium text-brand-text flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-yellow-500"></span>
+                            Contacted
+                        </span>
+                        <span class="font-bold text-brand-text" id="stage-contacted">0</span>
+                    </div>
+                    <div class="w-full bg-yellow-50 h-1.5 rounded-full overflow-hidden">
+                        <div id="bar-contacted" class="bg-yellow-500 h-full transition-all duration-500"
+                            style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Interested -->
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="font-medium text-brand-text flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                            Interested
+                        </span>
+                        <span class="font-bold text-brand-text" id="stage-interested">0</span>
+                    </div>
+                    <div class="w-full bg-green-50 h-1.5 rounded-full overflow-hidden">
+                        <div id="bar-interested" class="bg-green-500 h-full transition-all duration-500"
+                            style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Follow-up -->
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="font-medium text-brand-text flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-orange-500"></span>
+                            Follow-up
+                        </span>
+                        <span class="font-bold text-brand-text" id="stage-follow-up">0</span>
+                    </div>
+                    <div class="w-full bg-orange-50 h-1.5 rounded-full overflow-hidden">
+                        <div id="bar-follow-up" class="bg-orange-500 h-full transition-all duration-500"
+                            style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Closed Deal -->
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="font-medium text-brand-text flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-emerald-600"></span>
+                            Closed Deal
+                        </span>
+                        <span class="font-bold text-brand-text" id="stage-closed-deal">0</span>
+                    </div>
+                    <div class="w-full bg-emerald-50 h-1.5 rounded-full overflow-hidden">
+                        <div id="bar-closed-deal" class="bg-emerald-600 h-full transition-all duration-500"
+                            style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Rejected -->
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="font-medium text-brand-text flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-red-500"></span>
+                            Rejected
+                        </span>
+                        <span class="font-bold text-brand-text" id="stage-rejected">0</span>
+                    </div>
+                    <div class="w-full bg-red-50 h-1.5 rounded-full overflow-hidden">
+                        <div id="bar-rejected" class="bg-red-500 h-full transition-all duration-500" style="width: 0%">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Leads by Agent -->
+        <div class="card">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-sm font-semibold text-brand-text">Leads by Agent</h3>
+                    <p class="text-xs text-brand-secondary">Resource allocation</p>
+                </div>
+                <i data-lucide="user-check" class="w-4 h-4 text-brand-secondary"></i>
+            </div>
+            <div class="space-y-4" id="agent-breakdown">
+                <!-- Loaded via JS -->
+            </div>
+        </div>
+
+        <!-- Opportunity Radar -->
+        <div class="card">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-sm font-semibold text-brand-text">Opportunity Radar</h3>
+                    <p class="text-xs text-brand-secondary">Targetable service gaps</p>
+                </div>
+                <i data-lucide="radar" class="w-4 h-4 text-brand-secondary"></i>
+            </div>
+            <div class="space-y-4" id="opportunity-breakdown">
+                <!-- Loaded via JS -->
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Fetch KPI data after page load
+    fetch('/api/leads/count')
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById('kpi-new-today').querySelector('p').textContent = data.new_leads_today || 0;
+            document.getElementById('kpi-total').querySelector('p').textContent = data.total_leads || 0;
+            const kpiHighPotential = document.getElementById('kpi-high-potential');
+            if (kpiHighPotential) kpiHighPotential.textContent = data.high_potential || 0;
+            document.getElementById('kpi-closed').textContent = data.closed_deals || 0;
+
+            // Progress Bars logic
+            const stages = data.stage_breakdown || {};
+            const max = Math.max(...Object.values(stages), 1);
+
+            const updateStage = (id, count, barId) => {
+                const el = document.getElementById(id);
+                const bar = document.getElementById(barId);
+                if (el) el.textContent = count || 0;
+                if (bar) {
+                    const percentage = ((count || 0) / max) * 100;
+                    bar.style.width = `${percentage}%`;
+                }
+            };
+
+            updateStage('stage-new-lead', stages['New Lead'] || 0, 'bar-new-lead');
+            updateStage('stage-contacted', stages['Contacted'] || 0, 'bar-contacted');
+            updateStage('stage-interested', stages['Interested'] || 0, 'bar-interested');
+            updateStage('stage-follow-up', stages['Follow-up'] || 0, 'bar-follow-up');
+            updateStage('stage-closed-deal', stages['Closed Deal'] || 0, 'bar-closed-deal');
+            updateStage('stage-rejected', stages['Rejected'] || 0, 'bar-rejected');
+
+            // Agent breakdown logic
+            const agents = data.agents_breakdown || {};
+            const agentContainer = document.getElementById('agent-breakdown');
+            if (agentContainer) {
+                const agentEntries = Object.entries(agents);
+                if (agentEntries.length === 0) {
+                    agentContainer.innerHTML = '<p class="text-xs text-brand-secondary text-center py-4">No assignments yet.</p>';
+                } else {
+                    agentContainer.innerHTML = agentEntries.map(([name, count]) => `
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <div class="w-1.5 h-1.5 rounded-full bg-brand-primary"></div>
+                                <span class="text-xs font-medium text-brand-text">${name}</span>
+                            </div>
+                            <span class="text-xs font-black text-brand-text">${count}</span>
+                        </div>
+                    `).join('');
+                }
+            }
+
+            // Opportunity breakdown logic
+            const opportunities = data.opportunity_stats || {};
+            const oppContainer = document.getElementById('opportunity-breakdown');
+            if (oppContainer) {
+                const oppEntries = Object.entries(opportunities);
+                if (oppEntries.length === 0) {
+                    oppContainer.innerHTML = '<p class="text-xs text-brand-secondary text-center py-4">No gaps detected yet.</p>';
+                } else {
+                    oppContainer.innerHTML = oppEntries.map(([name, count]) => `
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="zap" class="w-3 h-3 text-brand-primary"></i>
+                                <span class="text-xs font-medium text-brand-text">${name}</span>
+                            </div>
+                            <span class="text-[10px] font-black px-2 py-0.5 bg-brand-bg rounded-full text-brand-primary">${count}</span>
+                        </div>
+                    `).join('');
+                    if (window.lucide) lucide.createIcons();
+                }
+            }
+        })
+        .catch(err => console.error("Error fetching KPIs:", err));
+
+    // Fetch and initialize Charts
+    fetch('/api/leads/trends')
+        .then(r => r.json())
+        .then(data => {
+            // 1. Discovery Timeline Chart
+            const ctxDiscovery = document.getElementById('discoveryChart');
+            if (ctxDiscovery && data.timeline) {
+                new Chart(ctxDiscovery, {
+                    type: 'line',
+                    data: {
+                        labels: data.timeline.labels,
+                        datasets: [{
+                            label: 'Leads Found',
+                            data: data.timeline.data,
+                            borderColor: '#4A4E69',
+                            backgroundColor: 'rgba(74, 78, 105, 0.1)',
+                            borderWidth: 2,
+                            pointBackgroundColor: '#FFFFFF',
+                            pointBorderColor: '#4A4E69',
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: '#22223B',
+                                padding: 10,
+                                cornerRadius: 8,
+                                displayColors: false,
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: 'rgba(201, 173, 167, 0.2)', borderDash: [5, 5] },
+                                ticks: { precision: 0, color: '#9A8C98', font: { size: 11 } }
+                            },
+                            x: {
+                                grid: { display: false },
+                                ticks: { color: '#9A8C98', font: { size: 11 } }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // 2. AI Quality Doughnut Chart
+            const ctxQuality = document.getElementById('qualityChart');
+            if (ctxQuality && data.quality) {
+                new Chart(ctxQuality, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['High', 'Medium', 'Low', 'Unscored'],
+                        datasets: [{
+                            data: [
+                                data.quality.High || 0,
+                                data.quality.Medium || 0,
+                                data.quality.Low || 0,
+                                data.quality.Unscored || 0
+                            ],
+                            backgroundColor: [
+                                '#059669', // Emerald 600 - High
+                                '#eab308', // Yellow 500 - Medium
+                                '#ef4444', // Red 500 - Low
+                                '#e5e7eb'  // Gray 200 - Unscored
+                            ],
+                            borderWidth: 0,
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '75%',
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: {
+                                    boxWidth: 10,
+                                    usePointStyle: true,
+                                    padding: 15,
+                                    color: '#4A4E69',
+                                    font: { size: 11, family: "'Inter', sans-serif" }
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: '#22223B',
+                                padding: 10,
+                                cornerRadius: 8,
+                            }
+                        }
+                    }
+                });
+            }
+        })
+        .catch(err => console.error("Error fetching Charts data:", err));
+
+    function toggleTask(taskId, completed) {
+        fetch(`/api/tasks/${taskId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ is_completed: completed })
+        }).then(() => {
+            htmx.trigger('#dash-task-list', 'load');
+        });
+    }
+
+    function deleteTask(taskId) {
+        if (!confirm('Delete this task?')) return;
+        fetch(`/api/tasks/${taskId}`, { method: 'DELETE' })
+            .then(() => {
+                htmx.trigger('#dash-task-list', 'load');
+            });
+    }
+</script>
+{% endblock %}

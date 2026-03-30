@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+{% block title %}Email Outreach Sequences — LeadGen CRM{% endblock %}
+{% block page_title %}Outreach Sequences{% endblock %}
+{% block page_subtitle %}Automate your follow-ups with high-conversion email drip campaigns{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-10">
+    <div class="flex items-center gap-6">
+        <div class="flex -space-x-3">
+            <div
+                class="w-10 h-10 rounded-full bg-blue-500 border-4 border-white flex items-center justify-center text-white font-bold text-xs">
+                A</div>
+            <div
+                class="w-10 h-10 rounded-full bg-emerald-500 border-4 border-white flex items-center justify-center text-white font-bold text-xs">
+                B</div>
+            <div
+                class="w-10 h-10 rounded-full bg-amber-500 border-4 border-white flex items-center justify-center text-white font-bold text-xs">
+                C</div>
+        </div>
+        <div class="h-8 w-px bg-brand-border/20"></div>
+        <div class="flex flex-col">
+            <span class="text-xl font-black text-brand-text">Active Pipelines</span>
+            <span class="text-xs font-bold text-brand-secondary uppercase tracking-widest">Multi-Step Automation
+                Engine</span>
+        </div>
+    </div>
+    <button onclick="openCreateCampaignModal()"
+        class="h-12 px-6 bg-brand-primary text-white rounded-2xl text-sm font-black uppercase tracking-widest shadow-xl shadow-brand-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-3">
+        <i data-lucide="plus" class="w-5 h-5"></i>
+        New Sequence
+    </button>
+</div>
+
+<!-- Campaigns Grid -->
+<div id="campaign-list" hx-get="/api/campaigns/" hx-trigger="load" hx-swap="innerHTML"
+    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+    <!-- Partial will load here -->
+    <div class="col-span-full py-20 text-center opacity-40">
+        <i data-lucide="loader-2" class="w-10 h-10 animate-spin mx-auto mb-4"></i>
+        <p class="font-bold tracking-widest uppercase text-xs">Synchronizing Automation Hub...</p>
+    </div>
+</div>
+
+<!-- Create Campaign Modal -->
+<div id="create-campaign-modal"
+    class="fixed inset-0 bg-brand-text/40 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+    <div
+        class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden m-4 border border-white/20">
+        <div class="p-8 pb-4 flex justify-between items-center bg-brand-bg/10 border-b border-brand-border/20">
+            <div class="flex flex-col">
+                <h3 class="text-2xl font-black text-brand-text tracking-tight">Design Sequence</h3>
+                <span class="text-[10px] font-black text-brand-secondary uppercase tracking-[0.2em]">Sequence Builder
+                    v1.0</span>
+            </div>
+            <button onclick="closeCreateCampaignModal()"
+                class="p-2 rounded-xl hover:bg-rose-50 text-brand-secondary hover:text-rose-500 transition-all">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-10">
+            <form id="campaign-form" onsubmit="saveCampaign(event)" class="space-y-10">
+                <!-- Campaign General Info -->
+                <div class="space-y-4">
+                    <label
+                        class="block text-[11px] font-black text-brand-secondary uppercase tracking-[0.2em] ml-1">Sequence
+                        Name</label>
+                    <input type="text" name="name" required placeholder="e.g. Real Estate Follow-up (Mumbai)"
+                        class="w-full h-14 px-6 bg-brand-bg/30 border border-brand-border/40 rounded-2xl focus:ring-4 focus:ring-brand-primary/10 outline-none transition-all font-bold text-brand-text text-lg">
+                </div>
+
+                <div class="h-px bg-brand-border/20"></div>
+
+                <!-- Steps Container -->
+                <div class="space-y-8">
+                    <div class="flex justify-between items-center">
+                        <label
+                            class="text-[11px] font-black text-brand-secondary uppercase tracking-[0.2em] ml-1">Automation
+                            Steps</label>
+                        <button type="button" onclick="addStep()"
+                            class="text-[10px] font-black text-brand-primary uppercase tracking-widest hover:underline flex items-center gap-1.5">
+                            <i data-lucide="plus-circle" class="w-4 h-4"></i> Add Follow-up
+                        </button>
+                    </div>
+
+                    <div id="steps-container" class="space-y-8">
+                        <!-- Step Template -->
+                        <div class="campaign-step bg-brand-bg/20 rounded-[2rem] p-8 border border-brand-border/20 relative group transition-all hover:border-brand-primary/20 hover:bg-brand-bg/30"
+                            data-step="1">
+                            <div
+                                class="absolute -left-4 top-8 w-10 h-10 rounded-full bg-brand-primary text-white flex items-center justify-center font-black shadow-lg shadow-brand-primary/30 z-10">
+                                1</div>
+
+                            <div class="space-y-6">
+                                <div class="grid grid-cols-3 gap-6">
+                                    <div class="col-span-2">
+                                        <label
+                                            class="block text-[10px] font-bold text-brand-secondary uppercase mb-2 ml-1 opacity-60">Subject
+                                            Line</label>
+                                        <input type="text"
+                                            class="step-subject w-full h-12 px-5 bg-white border border-brand-border/40 rounded-xl outline-none font-bold text-brand-text focus:ring-2 focus:ring-brand-primary/20 transition-all"
+                                            placeholder="e.g. Quick question about {company}">
+                                    </div>
+                                    <div>
+                                        <label
+                                            class="block text-[10px] font-bold text-brand-secondary uppercase mb-2 ml-1 opacity-60">Wait
+                                            Days</label>
+                                        <div class="relative">
+                                            <input type="number"
+                                                class="step-delay w-full h-12 px-5 bg-white border border-brand-border/40 rounded-xl outline-none font-bold text-brand-text focus:ring-2 focus:ring-brand-primary/20 transition-all"
+                                                value="0">
+                                            <span
+                                                class="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-brand-secondary/40 uppercase">Days</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label
+                                        class="block text-[10px] font-bold text-brand-secondary uppercase mb-2 ml-1 opacity-60">Email
+                                        Body</label>
+                                    <textarea
+                                        class="step-body w-full h-32 px-5 py-4 bg-white border border-brand-border/40 rounded-xl outline-none font-medium text-brand-text focus:ring-2 focus:ring-brand-primary/20 transition-all resize-none"
+                                        placeholder="Write your message here... 
+Available Tags: {company}, {city}, {website}, {phone}, {email}, {address}"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-6">
+                    <button type="submit" id="save-campaign-btn"
+                        class="w-full h-16 bg-brand-text text-white rounded-2xl font-black uppercase tracking-[0.2em] shadow-xl hover:bg-brand-primary transition-all flex items-center justify-center gap-3">
+                        Deploy Outreach Sequence
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openCreateCampaignModal() {
+        document.getElementById('create-campaign-modal').classList.remove('hidden');
+    }
+
+    function closeCreateCampaignModal() {
+        document.getElementById('create-campaign-modal').classList.add('hidden');
+    }
+
+    let stepCount = 1;
+    function addStep() {
+        stepCount++;
+        const container = document.getElementById('steps-container');
+        const nextDateLabel = stepCount === 1 ? 'Instant Send' : `Wait After Step ${stepCount - 1}`;
+
+        const div = document.createElement('div');
+        div.className = 'campaign-step bg-brand-bg/20 rounded-[2rem] p-8 border border-brand-border/20 relative group transition-all hover:border-brand-primary/20 hover:bg-brand-bg/30';
+        div.dataset.step = stepCount;
+        div.innerHTML = `
+            <div class="absolute -left-4 top-8 w-10 h-10 rounded-full bg-brand-primary text-white flex items-center justify-center font-black shadow-lg shadow-brand-primary/30 z-10">${stepCount}</div>
+            <button type="button" onclick="removeStep(this)" class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 transition-all">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+            </button>
+            <div class="space-y-6">
+                <div class="grid grid-cols-3 gap-6">
+                    <div class="col-span-2">
+                        <label class="block text-[10px] font-bold text-brand-secondary uppercase mb-2 ml-1 opacity-60">Subject Line</label>
+                        <input type="text" class="step-subject w-full h-12 px-5 bg-white border border-brand-border/40 rounded-xl outline-none font-bold text-brand-text focus:ring-2 focus:ring-brand-primary/20 transition-all" placeholder="Follow-up ${stepCount - 1}">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-brand-secondary uppercase mb-2 ml-1 opacity-60">Wait Days</label>
+                        <div class="relative">
+                            <input type="number" class="step-delay w-full h-12 px-5 bg-white border border-brand-border/40 rounded-xl outline-none font-bold text-brand-text focus:ring-2 focus:ring-brand-primary/20 transition-all" value="3">
+                            <span class="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-brand-secondary/40 uppercase">Days</span>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-brand-secondary uppercase mb-2 ml-1 opacity-60">Email Body</label>
+                    <textarea class="step-body w-full h-32 px-5 py-4 bg-white border border-brand-border/40 rounded-xl outline-none font-medium text-brand-text focus:ring-2 focus:ring-brand-primary/20 transition-all resize-none"></textarea>
+                </div>
+            </div>
+        `;
+        container.appendChild(div);
+        if (window.lucide) lucide.createIcons();
+    }
+
+    function removeStep(btn) {
+        btn.closest('.campaign-step').remove();
+        // Re-number remaining steps
+        document.querySelectorAll('.campaign-step').forEach((el, idx) => {
+            el.dataset.step = idx + 1;
+            el.querySelector('.absolute.-left-4').textContent = idx + 1;
+        });
+        stepCount = document.querySelectorAll('.campaign-step').length;
+    }
+
+    async function saveCampaign(e) {
+        e.preventDefault();
+        const btn = document.getElementById('save-campaign-btn');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> Initializing Pipeline...';
+
+        const name = e.target.name.value;
+        const steps = [];
+        document.querySelectorAll('.campaign-step').forEach(el => {
+            steps.push({
+                step_number: parseInt(el.dataset.step),
+                subject: el.querySelector('.step-subject').value,
+                body: el.querySelector('.step-body').value,
+                delay_days: parseInt(el.querySelector('.step-delay').value)
+            });
+        });
+
+        try {
+            const res = await fetch('/api/campaigns/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, steps })
+            });
+            if (!res.ok) throw new Error('Failed to deploy sequence');
+
+            closeCreateCampaignModal();
+            htmx.trigger('#campaign-list', 'load');
+        } catch (err) {
+            alert(err.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    }
+
+    function deleteCampaign(id) {
+        if (!confirm('Are you sure? This will stop all active outreaches for this sequence.')) return;
+        fetch(`/api/campaigns/${id}`, { method: 'DELETE' })
+            .then(() => htmx.trigger('#campaign-list', 'load'));
+    }
+</script>
+{% endblock %}

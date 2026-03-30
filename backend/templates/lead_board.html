@@ -1,0 +1,155 @@
+{% set statuses = ['New Lead', 'Contacted', 'Interested', 'Follow-up', 'Closed Deal', 'Rejected'] %}
+<div class="kanban-board" id="kanban-board">
+    {% for status in statuses %}
+    <div class="kanban-column">
+        <!-- Column Header -->
+        <div class="kanban-column-header">
+            <div class="kanban-column-title">
+                <div class="status-dot 
+                    {% if status == 'New Lead' %}bg-blue-400
+                    {% elif status == 'Contacted' %}bg-yellow-400
+                    {% elif status == 'Interested' %}bg-green-400
+                    {% elif status == 'Follow-up' %}bg-purple-400
+                    {% elif status == 'Closed Deal' %}bg-emerald-500
+                    {% else %}bg-brand-secondary{% endif %}"></div>
+                <h3>{{ status }}</h3>
+            </div>
+            {% set count = leads|selectattr('status', 'equalto', status)|list|length %}
+            <span class="column-count">{{ count }}</span>
+        </div>
+
+        <!-- Scrollable Cards Container -->
+        <div class="kanban-cards-area" data-status="{{ status }}">
+            {% for lead in leads if lead.status == status %}
+            <div class="kanban-card group" data-lead-id="{{ lead.id }}" onclick="openDrawer('{{ lead.id }}')">
+                
+                <!-- Card Header -->
+                <div class="card-header">
+                    <div class="card-header-main overflow-hidden">
+                        <h4 class="card-company-name">
+                            {{ lead.company_name }}
+                        </h4>
+                        <div class="card-source">
+                             {% if lead.source == 'Reddit' %}
+                             <i data-lucide="message-square" style="width: 10px; height: 10px;" class="text-orange-500"></i>
+                             <span>Reddit</span>
+                             {% else %}
+                             <i data-lucide="map-pin" style="width: 10px; height: 10px;" class="text-emerald-500"></i>
+                             <span>Maps</span>
+                             {% endif %}
+                        </div>
+                    </div>
+                    {% if lead.ai_score %}
+                    <div class="ai-score-pill 
+                        {% if lead.ai_score_label == 'High' %}ai-high
+                        {% elif lead.ai_score_label == 'Medium' %}ai-medium
+                        {% else %}ai-low{% endif %}">
+                        {{ lead.ai_score }}%
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="card-attributes">
+                    <span class="attr-badge">
+                        <i data-lucide="globe" style="width: 10px; height: 10px;"></i> {{ lead.city or 'Local' }}
+                    </span>
+                    <span class="attr-badge">
+                        <i data-lucide="star" style="width: 10px; height: 10px;" class="text-yellow-500 fill-current"></i> {{ lead.rating or '0.0' }}
+                    </span>
+                </div>
+
+                <div class="card-footer">
+                    <div class="assignee-info">
+                        {% if lead.assigned_to %}
+                        <div class="assignee-avatar" title="{{ lead.assigned_to.full_name or lead.assigned_to.email }}">
+                            {{ (lead.assigned_to.full_name or lead.assigned_to.email)[0] }}
+                        </div>
+                        <span class="assignee-name">{{ (lead.assigned_to.full_name or lead.assigned_to.email).split(' ')[0] }}</span>
+                        {% else %}
+                        <div class="assignee-avatar" title="Unassigned">?</div>
+                        <span class="assignee-name" style="opacity: 0.4;">Open</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="card-actions" onclick="event.stopPropagation()">
+                        {% if lead.email %}
+                        <button data-lead-id="{{ lead.id }}" 
+                                data-email="{{ lead.email }}" 
+                                data-company-name="{{ lead.company_name }}"
+                                onclick="openEmailModalFromCard(this)" 
+                                class="action-btn">
+                            <i data-lucide="mail" style="width: 14px; height: 14px;"></i>
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            {% if (leads|selectattr('status', 'equalto', status)|list|length) == 0 %}
+            <div class="empty-placeholder">
+                Drop here
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+    lucide.createIcons();
+    
+    function openEmailModalFromCard(btn) {
+        const leadId = btn.dataset.leadId;
+        const email = btn.dataset.email;
+        const companyName = btn.dataset.companyName;
+        if (typeof openEmailModal === 'function') {
+            openEmailModal(leadId, email, companyName);
+        }
+    }
+    
+    // Board specific drag and drop logic
+    document.querySelectorAll('.kanban-cards-area').forEach(column => {
+        new Sortable(column, {
+            group: 'kanban',
+            animation: 150,
+            ghostClass: 'bg-brand-primary/5',
+            dragClass: 'opacity-50',
+            onEnd: function (evt) {
+                const leadId = evt.item.dataset.leadId;
+                const newStatus = evt.to.dataset.status;
+                const oldStatus = evt.from.dataset.status;
+                
+                if (newStatus === oldStatus) return;
+                
+                console.log(`Moving lead ${leadId} to ${newStatus}`);
+                
+                // Update on server
+                fetch(`/api/leads/${leadId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: newStatus })
+                })
+                .then(res => {
+                    if (!res.ok) throw new Error('Failed to update status');
+                    // We don't need to full trigger refresh if the card is already there
+                    // but we might want to update some counters
+                    refreshPipelineStats(); // Function to update column counts if needed
+                })
+                .catch(err => {
+                    alert('Error updating status');
+                    // Revert UI? Sortable makes it hard, maybe just refresh
+                    window.location.reload();
+                });
+            }
+        });
+    });
+
+    function refreshPipelineStats() {
+        // Logic to update counts on top of columns
+        document.querySelectorAll('.kanban-column').forEach(col => {
+            const count = col.querySelectorAll('.kanban-card').length;
+            const countBadge = col.querySelector('span');
+            if (countBadge) countBadge.textContent = count;
+        });
+    }
+</script>

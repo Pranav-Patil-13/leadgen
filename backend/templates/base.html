@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}LeadGen CRM{% endblock %}</title>
+    <meta name="description" content="Automated lead discovery and CRM platform">
+
+    <!-- Tailwind CSS (Compiled generated via CLI) -->
+    <link href="/static/css/output.css?v=2" rel="stylesheet">
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- SortableJS -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+    <style>
+        /* Essential Layout CSS (Works even if Tailwind CDN fails) */
+        :root {
+            --brand-bg: #F8F9FA;
+            --brand-primary: #343A40;
+            --brand-secondary: #6C757D;
+            --brand-card: #FFFFFF;
+            --brand-text: #212529;
+            --brand-border: #DEE2E6;
+            --brand-hover: #E9ECEF;
+            --brand-dots: #CED4DA;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: var(--brand-bg);
+            color: var(--brand-text);
+            margin: 0;
+            display: flex;
+            min-height: 100vh;
+            background-image: radial-gradient(var(--brand-dots) 1.2px, transparent 1px);
+            background-size: 32px 32px;
+        }
+
+        /* Sidebar Styling */
+        aside {
+            width: 260px;
+            background-color: var(--brand-card);
+            border-right: 1px solid var(--brand-border);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            z-index: 50;
+        }
+
+        main {
+            flex: 1;
+            margin-left: 260px;
+            display: flex;
+            flex-direction: column;
+            width: calc(100% - 260px);
+            min-width: 0;
+            overflow-x: hidden;
+        }
+
+        header {
+            background-color: var(--brand-card);
+            border-bottom: 1px solid var(--brand-border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 40;
+        }
+
+        .content-container {
+            padding: 2rem;
+        }
+
+        /* Sidebar Links */
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 16px;
+            border-radius: 8px;
+            color: var(--brand-text);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 4px;
+            transition: all 0.2s;
+        }
+
+        .sidebar-link:hover {
+            background-color: var(--brand-hover);
+        }
+
+        .sidebar-link.active {
+            background-color: var(--brand-primary);
+            color: white;
+        }
+
+        .sidebar-link.active i,
+        .sidebar-link.active svg {
+            color: white !important;
+        }
+
+        .sidebar-link i,
+        .sidebar-link svg {
+            color: var(--brand-secondary);
+            transition: color 0.2s;
+        }
+
+        .sidebar-link:hover i,
+        .sidebar-link:hover svg {
+            color: var(--brand-text);
+        }
+
+        /* Buttons and Cards */
+        .btn-primary {
+            background-color: var(--brand-primary);
+            color: white !important;
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-primary:hover {
+            filter: brightness(0.9);
+            box-shadow: 0 4px 12px rgba(64, 64, 100, 0.15);
+        }
+
+        .card {
+            background-color: var(--brand-card);
+            border: 1px solid var(--brand-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        /* Table Hover Icon Fix */
+        tr:hover .text-brand-secondary {
+            color: var(--brand-text) !important;
+        }
+
+        /* HTMX Indicator Fixes */
+        .htmx-indicator {
+            opacity: 0 !important;
+            transition: opacity 200ms ease-in !important;
+            pointer-events: none;
+        }
+
+        .htmx-request .htmx-indicator {
+            opacity: 1 !important;
+        }
+
+        .htmx-request.htmx-indicator {
+            opacity: 1 !important;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--brand-secondary);
+            border-radius: 3px;
+        }
+
+        /* KPI Grid fallback */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+        }
+
+        /* Animated Border Beam */
+        @keyframes border-rotate {
+            from {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+
+            to {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
+
+        .border-beam-card {
+            position: relative;
+        }
+
+        .border-beam {
+            pointer-events: none;
+            position: absolute;
+            inset: -2px;
+            border-radius: inherit;
+            padding: 4px;
+            /* The visible border thickness */
+
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+
+            z-index: 999;
+            overflow: hidden;
+        }
+
+        .border-beam::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 300%;
+            height: 300%;
+            background: conic-gradient(from 0deg,
+                    transparent 40%,
+                    #3b82f6 70%,
+                    #60a5fa 85%,
+                    #3b82f6 100%);
+            transform: translate(-50%, -50%);
+            animation: border-rotate 3s linear infinite;
+            filter: blur(8px);
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+
+<body>
+
+    {% if not no_layout %}
+    <!-- Sidebar -->
+    <aside>
+        <!-- Logo -->
+        <div style="padding: 1.5rem;">
+            <h1 style="font-size: 1.25rem; font-weight: 700; color: var(--brand-primary); margin: 0;">LeadGen CRM</h1>
+            <p style="font-size: 0.75rem; color: var(--brand-secondary); margin: 4px 0 0 0;">Automated Lead Discovery
+            </p>
+        </div>
+
+        <!-- Navigation -->
+        <nav style="flex: 1; padding: 1rem; overflow-y: auto;">
+            <a href="/" class="sidebar-link" id="nav-dashboard">
+                <i data-lucide="layout-dashboard" style="width: 20px; height: 20px;"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="/leads" class="sidebar-link" id="nav-leads">
+                <i data-lucide="users" style="width: 20px; height: 20px;"></i>
+                <span>Leads</span>
+            </a>
+            <a href="/pipelines" class="sidebar-link" id="nav-pipelines">
+                <i data-lucide="git-branch" style="width: 20px; height: 20px;"></i>
+                <span>Pipelines</span>
+            </a>
+            <a href="/team" class="sidebar-link" id="nav-team">
+                <i data-lucide="user-check" style="width: 20px; height: 20px;"></i>
+                <span>Team</span>
+            </a>
+            <a href="/calendar" class="sidebar-link" id="nav-calendar">
+                <i data-lucide="calendar" style="width: 20px; height: 20px;"></i>
+                <span>Tasks & Calendar</span>
+            </a>
+            <a href="/activity" class="sidebar-link" id="nav-activity">
+                <i data-lucide="activity" style="width: 20px; height: 20px;"></i>
+                <span>Activity</span>
+            </a>
+            <a href="/outreach" class="sidebar-link" id="nav-outreach">
+                <i data-lucide="mail" style="width: 20px; height: 20px;"></i>
+                <span>Outreach</span>
+            </a>
+
+            <div style="height: 1px; background-color: var(--brand-border); margin: 1rem 0;"></div>
+
+            <a href="/settings" class="sidebar-link" id="nav-settings">
+                <i data-lucide="settings" style="width: 20px; height: 20px;"></i>
+                <span>Settings</span>
+            </a>
+        </nav>
+
+        <!-- User Profile -->
+        <div style="padding: 1rem; border-top: 1px solid var(--brand-border);">
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 0 8px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div
+                        style="width: 32px; height: 32px; border-radius: 50%; background-color: var(--brand-primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 0.875rem; font-weight: 600;">
+                        {{ (user.full_name or user.email)[0]|upper if user else 'U' }}
+                    </div>
+                    <div>
+                        <p
+                            style="font-size: 0.875rem; font-weight: 500; margin: 0; max-width: 120px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                            {{ user.full_name or 'User' if user else 'Guest' }}
+                        </p>
+                        <p style="font-size: 0.75rem; color: var(--brand-secondary); margin: 0;">{{ user.email if user
+                            else '' }}</p>
+                    </div>
+                </div>
+                <a href="/logout" title="Logout" class="text-brand-secondary hover:text-brand-text transition-colors"
+                    style="margin-left: 8px;">
+                    <i data-lucide="log-out" style="width: 16px; height: 16px;"></i>
+                </a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main>
+        <!-- Top Header -->
+        <header>
+            <div>
+                <h2 style="font-size: 1.125rem; font-weight: 600; margin: 0;">{% block page_title %}Dashboard{% endblock
+                    %}</h2>
+                <p style="font-size: 0.875rem; color: var(--brand-secondary); margin: 4px 0 0 0;">{% block page_subtitle
+                    %}Overview of your lead generation{% endblock %}</p>
+            </div>
+            <div style="display: flex; align-items: center; gap: 16px;" class="relative" id="notif-wrapper">
+                <button onclick="toggleNotifications()"
+                    style="border: none; background: transparent; cursor: pointer; padding: 8px; position: relative;"
+                    class="hover:bg-brand-hover rounded-lg transition-colors">
+                    <i data-lucide="bell" style="width: 20px; height: 20px; color: var(--brand-secondary);"></i>
+                    <span id="notifications-badge"
+                        style="position: absolute; top: 8px; right: 8px; width: 8px; height: 8px; background-color: #ef4444; border-radius: 50%; display: none;"></span>
+                </button>
+
+                <!-- Notifications Dropdown -->
+                <div id="notifications-dropdown"
+                    class="absolute top-12 right-0 w-[340px] bg-white rounded-2xl shadow-xl border border-brand-border/40 hidden z-50 flex-col focus-within:ring-0">
+                    <div
+                        class="p-4 border-b border-brand-border/40 flex items-center justify-between bg-brand-bg/20 rounded-t-2xl">
+                        <h4 class="text-sm font-bold text-brand-text flex items-center gap-2">
+                            <i data-lucide="bell-ring" class="w-4 h-4 text-brand-primary"></i>
+                            Notifications
+                        </h4>
+                        <span
+                            class="text-[10px] font-bold bg-brand-primary/10 px-2 py-0.5 rounded text-brand-primary uppercase tracking-widest"
+                            id="notif-count">New</span>
+                    </div>
+                    <div class="max-h-[60vh] overflow-y-auto w-full flex flex-col p-2 space-y-1"
+                        id="notifications-list">
+                        <!-- Loaded via JS -->
+                    </div>
+                    <div class="p-3 border-t border-brand-border/40 bg-brand-bg/30 text-center rounded-b-2xl cursor-pointer hover:bg-brand-hover transition-colors"
+                        onclick="window.location.href='/leads'">
+                        <span class="text-xs font-bold text-brand-primary">View All Leads</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Page Content -->
+        <div class="content-container">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+    {% else %}
+    <main style="margin-left: 0; width: 100%; justify-content: center; align-items: center;">
+        {% block full_content %}{% endblock %}
+    </main>
+    {% endif %}
+
+    <script>
+        lucide.createIcons();
+
+        // Highlight active sidebar link
+        const currentPath = window.location.pathname;
+        document.querySelectorAll('.sidebar-link').forEach(link => {
+            if (link.getAttribute('href') === currentPath) {
+                link.classList.add('active');
+            }
+        });
+
+        // Notifications System Setup
+        const notifDropdown = document.getElementById('notifications-dropdown');
+        const notifBadge = document.getElementById('notifications-badge');
+        const notifCountText = document.getElementById('notif-count');
+        let notificationsLoaded = false;
+
+        async function initNotifications() {
+            try {
+                // Peek at counts on load
+                const res = await fetch('/api/leads/reminders');
+                if (res.ok) {
+                    const html = await res.text();
+                    // Basic count heuristic based on items rendered
+                    const count = (html.match(/group flex/g) || []).length;
+                    if (count > 0) {
+                        notifBadge.style.display = 'block';
+                        notifCountText.textContent = `${count} New`;
+                    } else {
+                        notifBadge.style.display = 'none';
+                        notifCountText.textContent = '0 New';
+                    }
+                }
+            } catch (e) { }
+        }
+
+        // Run checking
+        initNotifications();
+
+        function toggleNotifications() {
+            if (notifDropdown.classList.contains('hidden')) {
+                notifDropdown.classList.remove('hidden');
+                notifBadge.style.display = 'none'; // Clear red dot when opened
+                if (!notificationsLoaded) {
+                    fetchNotifications();
+                }
+            } else {
+                notifDropdown.classList.add('hidden');
+            }
+        }
+
+        // Close when clicking outside
+        document.addEventListener('click', (e) => {
+            const wrapper = document.getElementById('notif-wrapper');
+            if (wrapper && !wrapper.contains(e.target)) {
+                notifDropdown.classList.add('hidden');
+            }
+        });
+
+        async function fetchNotifications() {
+            const list = document.getElementById('notifications-list');
+            list.innerHTML = `<div class="p-8 text-center"><i data-lucide="loader-2" class="w-5 h-5 animate-spin mx-auto text-brand-secondary"></i></div>`;
+            if (window.lucide) lucide.createIcons();
+
+            try {
+                const res = await fetch('/api/leads/reminders');
+                if (!res.ok) throw new Error('Network error');
+                const html = await res.text();
+                list.innerHTML = html;
+                notificationsLoaded = true;
+                if (window.lucide) lucide.createIcons();
+            } catch (error) {
+                list.innerHTML = `<div class="p-4 text-center text-xs text-brand-secondary">Failed to load feed</div>`;
+            }
+        }
+    </script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+
+</html>

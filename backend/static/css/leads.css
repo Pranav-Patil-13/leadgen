@@ -1,0 +1,493 @@
+/* leads.css */
+
+/* Filter Bar */
+.filter-bar {
+    margin-bottom: 1rem;
+    padding: 0 0.5rem;
+    height: 52px;
+    background-color: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--brand-border);
+    border-radius: 0.875rem;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.02);
+    display: flex;
+    align-items: center;
+}
+
+.filter-row {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    width: 100%;
+}
+
+.search-container {
+    width: 2.25rem;
+    height: 2.25rem;
+    position: relative;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background-color: white;
+    border: 1px solid var(--brand-border);
+    border-radius: 0.625rem;
+    cursor: pointer;
+}
+
+.search-container:focus-within {
+    width: 240px;
+    cursor: default;
+    border-color: var(--brand-primary);
+}
+
+.search-input {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    padding-left: 2.25rem;
+    padding-right: 0.75rem;
+    font-size: 0.75rem;
+    background-color: transparent;
+    border: none;
+    border-radius: 0.625rem;
+    font-weight: 500;
+    color: var(--brand-text);
+    outline: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.search-container:focus-within .search-input {
+    opacity: 1;
+}
+
+.search-icon {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0.75rem;
+    height: 0.75rem;
+    color: var(--brand-secondary);
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.filter-select-group {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.divider {
+    width: 1px;
+    height: 18px;
+    background-color: var(--brand-border);
+    opacity: 0.3;
+    margin: 0 0.125rem;
+}
+
+.filter-select-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.filter-select {
+    height: 2.25rem;
+    padding-left: 0.5rem;
+    padding-right: 1.5rem;
+    background-color: white;
+    border: 1px solid var(--brand-border);
+    border-radius: 0.625rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--brand-text);
+    min-width: 90px;
+    appearance: none;
+    cursor: pointer;
+    outline: none;
+    transition: background-color 0.1s;
+}
+
+.filter-select:hover {
+    background-color: var(--brand-bg);
+}
+
+.filter-select-icon {
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0.5rem;
+    height: 0.5rem;
+    color: var(--brand-secondary);
+    pointer-events: none;
+    opacity: 0.5;
+}
+
+.city-input {
+    height: 2.25rem;
+    padding-left: 1.75rem;
+    padding-right: 0.5rem;
+    background-color: white;
+    border: 1px solid var(--brand-border);
+    border-radius: 0.625rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--brand-text);
+    width: 80px;
+    outline: none;
+}
+
+.city-icon {
+    position: absolute;
+    left: 0.625rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0.625rem;
+    height: 0.625rem;
+    color: var(--brand-secondary);
+    opacity: 0.4;
+}
+
+/* Kanban Board */
+.kanban-board {
+    display: flex;
+    gap: 1rem;
+    scroll-behavior: smooth;
+    overflow-x: auto;
+    padding-bottom: 1rem;
+    margin-top: 0.5rem;
+    height: calc(100vh - 280px);
+    width: 100%;
+    max-width: 100%;
+}
+
+.kanban-column {
+    width: 270px !important;
+    min-width: 270px !important;
+    max-width: 270px !important;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    background-color: rgba(242, 233, 228, 0.3);
+    border-radius: 1rem;
+    border: 1px solid rgba(201, 173, 167, 0.1);
+    overflow: hidden;
+}
+
+.kanban-column-header {
+    padding: 0.75rem;
+    border-bottom: 1px solid rgba(201, 173, 167, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: rgba(255, 255, 255, 0.4);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.kanban-column-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.status-dot {
+    width: 0.625rem;
+    height: 0.625rem;
+    border-radius: 50%;
+}
+
+.kanban-column-title h3 {
+    font-size: 11px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--brand-text);
+    margin: 0;
+}
+
+.column-count {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    background-color: rgba(74, 78, 105, 0.1);
+    color: var(--brand-primary);
+    border-radius: 4px;
+}
+
+.kanban-cards-area {
+    flex: 1;
+    padding: 0.5rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.kanban-card {
+    background-color: var(--brand-card);
+    padding: 1.25rem; /* More generous padding */
+    border-radius: 1rem;
+    border: 1px solid rgba(201, 173, 167, 0.2);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: grab;
+    position: relative;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    height: auto !important; /* Always grow with content */
+    min-height: fit-content;
+}
+
+.kanban-card:hover {
+    box-shadow: 0 8px 16px rgba(74, 78, 105, 0.08);
+    border-color: var(--brand-primary);
+    transform: translateY(-2px);
+}
+
+.kanban-card:active {
+    cursor: grabbing;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.5rem; /* Reduced to fit better */
+    width: 100%;
+}
+
+.card-company-name {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--brand-text);
+    line-height: 1.25;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    word-break: break-all;
+}
+
+.card-source {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    opacity: 0.6;
+    margin-top: 4px;
+}
+
+.card-source span {
+    font-size: 9px;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.ai-score-pill {
+    flex-shrink: 0;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 900;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    margin-left: 0.5rem; /* Spacing from name */
+}
+
+.ai-high { background-color: #ecfdf5; color: #047857; }
+.ai-medium { background-color: #fffbeb; color: #b45309; }
+.ai-low { background-color: #fff1f2; color: #be123c; }
+
+.card-attributes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.attr-badge {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background-color: rgba(242, 233, 228, 0.4);
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid rgba(201, 173, 167, 0.1);
+    font-size: 10px;
+    color: var(--brand-secondary);
+}
+
+.card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(201, 173, 167, 0.1);
+}
+
+.assignee-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.assignee-avatar {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 6px;
+    background-color: rgba(74, 78, 105, 0.1);
+    color: var(--brand-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 900;
+    text-transform: uppercase;
+    border: 1px solid rgba(74, 78, 105, 0.2);
+}
+
+.assignee-name {
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--brand-secondary);
+}
+
+.card-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.action-btn {
+    width: 1.75rem;
+    height: 1.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(242, 233, 228, 0.5);
+    border-radius: 6px;
+    border: none;
+    color: var(--brand-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.action-btn:hover {
+    background-color: rgba(74, 78, 105, 0.1);
+    color: var(--brand-primary);
+}
+
+/* Empty State */
+.empty-placeholder {
+    height: 6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(242, 233, 228, 0.1);
+    border: 1px dashed rgba(201, 173, 167, 0.2);
+    border-radius: 0.75rem;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: rgba(154, 140, 152, 0.3);
+    pointer-events: none;
+}
+
+/* View Toggle Container */
+.view-toggle {
+    display: flex;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.03);
+    padding: 2px;
+    border-radius: 0.5rem;
+}
+
+.toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 9px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border: none;
+    background: transparent;
+    color: var(--brand-secondary);
+    cursor: pointer;
+    transition: all 0.1s;
+}
+
+.toggle-btn.active {
+    background-color: var(--brand-primary) !important;
+    color: white !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Page Container Views */
+.view-container {
+    position: relative;
+    min-height: 400px;
+    background-color: white;
+    border-radius: 0.75rem;
+    border: 1px solid var(--brand-border);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.view-container.board-mode {
+    background-color: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+/* Buttons */
+.btn-export {
+    width: 2.25rem;
+    height: 2.25rem;
+    background-color: white;
+    border: 1px solid var(--brand-border);
+    border-radius: 0.625rem;
+    color: var(--brand-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-export:hover {
+    color: var(--brand-primary);
+    border-color: var(--brand-primary);
+    background-color: var(--brand-bg);
+}
+
+.btn-new-lead {
+    height: 2.25rem;
+    padding: 0 0.875rem;
+    background-color: var(--brand-primary);
+    color: white;
+    border-radius: 0.625rem;
+    border: none;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    box-shadow: 0 4px 10px rgba(52, 58, 64, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-new-lead:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.1);
+}

@@ -1,0 +1,25 @@
+<div class="overflow-x-auto">
+    <table class="w-full text-sm">
+        <thead>
+            <tr class="bg-white border-b border-brand-border/10">
+                <th class="py-3 px-4 w-10">
+                    <input type="checkbox" id="select-all-leads"
+                        class="rounded border-brand-border text-brand-primary focus:ring-brand-primary"
+                        onclick="toggleAllLeads(this)">
+                </th>
+                <th class="text-left py-3 px-4 text-[10px] font-black uppercase tracking-widest text-brand-secondary">Company</th>
+                <th class="text-left py-3 px-4 text-[10px] font-black uppercase tracking-widest text-brand-secondary">Phone</th>
+                <th class="text-left py-3 px-4 text-[10px] font-black uppercase tracking-widest text-brand-secondary">Email</th>
+                <th class="text-left py-3 px-4 text-[10px] font-black uppercase tracking-widest text-brand-secondary">City</th>
+                <th class="text-left py-3 px-4 text-[10px] font-black uppercase tracking-widest text-brand-secondary">AI Score</th>
+                <th class="text-left py-3 px-4 text-[10px] font-black uppercase tracking-widest text-brand-secondary">Rating</th>
+                <th class="text-left py-3 px-4 text-[10px] font-black uppercase tracking-widest text-brand-secondary">Status</th>
+                <th class="text-left py-3 px-4 text-[10px] font-black uppercase tracking-widest text-brand-secondary">Assignee</th>
+                <th class="text-left py-3 px-4 text-[10px] font-black uppercase tracking-widest text-brand-secondary">Actions</th>
+            </tr>
+        </thead>
+        <tbody id="leads-table-body">
+            {% include "lead_table.html" %}
+        </tbody>
+    </table>
+</div>

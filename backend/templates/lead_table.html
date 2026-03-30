@@ -1,0 +1,100 @@
+{% for lead in leads %}
+<tr class="border-b border-brand-border hover:bg-brand-hover cursor-pointer" onclick="openDrawer('{{ lead.id }}')">
+    <td class="py-3 px-4" onclick="event.stopPropagation()">
+        <input type="checkbox"
+            class="lead-checkbox rounded border-brand-border text-brand-primary focus:ring-brand-primary"
+            value="{{ lead.id }}" onchange="updateBulkBar()">
+    </td>
+    <td class="py-3 px-4 font-medium text-brand-text">
+        <div class="flex items-center gap-2">
+            {% if lead.source == 'Reddit' %}
+            <i data-lucide="message-square" class="w-3.5 h-3.5 text-orange-500" title="Source: Reddit"></i>
+            {% else %}
+            <i data-lucide="map-pin" class="w-3.5 h-3.5 text-emerald-500" title="Source: Google Maps"></i>
+            {% endif %}
+            <span class="truncate max-w-[150px]">{{ lead.company_name }}</span>
+            {% if lead.intent_data %}
+            <i data-lucide="info" class="w-3 h-3 text-brand-primary" title="{{ lead.intent_data }}"></i>
+            {% endif %}
+        </div>
+    </td>
+    <td class="py-3 px-4 text-brand-secondary">{{ lead.phone or '—' }}</td>
+    <td class="py-3 px-4 text-brand-secondary">{{ lead.email or '—' }}</td>
+    <td class="py-3 px-4 text-brand-secondary">{{ lead.city }}</td>
+    <td class="py-3 px-4">
+        {% if lead.ai_score %}
+        <div class="flex items-center gap-1.5" title="AI Confidence Score: {{ lead.ai_score }}/100">
+            <span class="text-[11px] font-bold 
+                {% if lead.ai_score_label == 'High' %}text-emerald-600
+                {% elif lead.ai_score_label == 'Medium' %}text-amber-600
+                {% else %}text-rose-500{% endif %}">
+                {{ lead.ai_score }}%
+            </span>
+            <div class="w-1.5 h-1.5 rounded-full 
+                {% if lead.ai_score_label == 'High' %}bg-emerald-500
+                {% elif lead.ai_score_label == 'Medium' %}bg-amber-500
+                {% else %}bg-rose-500{% endif %}"></div>
+        </div>
+        {% else %}
+        <span class="text-[10px] text-brand-secondary/40">Not Scored</span>
+        {% endif %}
+    </td>
+    <td class="py-3 px-4">
+        <span class="inline-flex items-center gap-1">
+            <i data-lucide="star" class="w-3.5 h-3.5 text-yellow-500 fill-current"></i>
+            {{ lead.rating }}
+        </span>
+    </td>
+    <td class="py-3 px-4">
+        <span class="px-2 py-1 rounded-full text-xs font-medium 
+            {% if lead.status == 'New Lead' %}bg-blue-100 text-blue-700
+            {% elif lead.status == 'Contacted' %}bg-yellow-100 text-yellow-700
+            {% elif lead.status == 'Interested' %}bg-green-100 text-green-700
+            {% elif lead.status == 'Closed Deal' %}bg-emerald-100 text-emerald-700
+            {% elif lead.status == 'Rejected' %}bg-red-100 text-red-700
+            {% else %}bg-gray-100 text-gray-700{% endif %}">
+            {{ lead.status }}
+        </span>
+    </td>
+    <td class="py-3 px-4">
+        {% if lead.assigned_to %}
+        <div class="flex items-center gap-2" title="{{ lead.assigned_to.full_name or lead.assigned_to.email }}">
+            <div
+                class="w-6 h-6 rounded-md bg-brand-primary text-white flex items-center justify-center font-bold text-[10px] uppercase">
+                {{ (lead.assigned_to.full_name or lead.assigned_to.email)[0] }}
+            </div>
+            <span class="text-xs text-brand-secondary hidden xl:inline">{{ (lead.assigned_to.full_name or
+                lead.assigned_to.email).split(' ')[0] }}</span>
+        </div>
+        {% else %}
+        <span class="text-[10px] font-bold text-brand-secondary/40 uppercase tracking-widest">—</span>
+        {% endif %}
+    </td>
+    <td class="py-3 px-4">
+        <div class="flex items-center gap-1">
+            <button class="p-1 hover:bg-brand-bg rounded"
+                onclick="event.stopPropagation(); window.open('{{ lead.website }}', '_blank')" {% if not lead.website
+                %}disabled{% endif %} title="Website">
+                <i data-lucide="external-link" class="w-4 h-4 text-brand-secondary"></i>
+            </button>
+            <button class="p-1 hover:bg-brand-bg rounded"
+                onclick="event.stopPropagation(); window.open('{{ lead.google_maps_url }}', '_blank')" {% if not
+                lead.google_maps_url %}disabled{% endif %} title="Google Maps">
+                <i data-lucide="map-pin" class="w-4 h-4 text-brand-secondary"></i>
+            </button>
+        </div>
+    </td>
+</tr>
+{% endfor %}
+
+{% if not leads %}
+<tr>
+    <td colspan="10" class="py-12 text-center text-brand-secondary">
+        No active leads matching your filters were found.
+    </td>
+</tr>
+{% endif %}
+
+<script>
+    lucide.createIcons();
+</script>

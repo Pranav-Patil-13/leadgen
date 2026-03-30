@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+
+{% block title %}Pipelines — LeadGen CRM{% endblock %}
+{% block page_title %}Pipelines{% endblock %}
+{% block page_subtitle %}Configure your automated lead discovery engines{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+    <div>
+        <p class="text-sm text-brand-secondary">Each pipeline discovers new leads daily based on your automated
+            criteria.</p>
+    </div>
+    <button id="create-pipeline-btn" onclick="openPipelineModal()"
+        class="h-11 px-6 bg-brand-primary text-white rounded-xl text-sm font-bold shadow-lg shadow-brand-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+        <i data-lucide="plus" class="w-4.5 h-4.5"></i>
+        Create New Pipeline
+    </button>
+</div>
+
+<!-- Pipelines Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="pipelines-grid" hx-get="/api/pipelines/"
+    hx-trigger="load, every 60s" hx-swap="innerHTML">
+    <div class="col-span-full py-20 text-center">
+        <i data-lucide="loader-2" class="w-10 h-10 mx-auto mb-4 animate-spin text-brand-primary/40"></i>
+        <p class="text-brand-secondary font-medium tracking-wide">Syncing your lead engines...</p>
+    </div>
+</div>
+
+<!-- Pipeline Modal (Create/Edit) -->
+<div id="pipeline-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closePipelineModal()"></div>
+    <div class="bg-brand-card shadow-2xl rounded-2xl w-full max-w-lg z-10 flex flex-col max-h-[90vh]">
+        <div class="flex items-center justify-between p-6 border-b border-brand-border">
+            <h3 class="text-lg font-bold text-brand-text" id="modal-title">Create New Pipeline</h3>
+            <button onclick="closePipelineModal()"
+                class="p-1 rounded text-brand-secondary hover:bg-brand-hover hover:text-brand-text transition-colors">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+        <div class="p-6 overflow-y-auto">
+            <form id="pipeline-form" class="space-y-5" onsubmit="savePipeline(event)">
+                <input type="hidden" name="id" id="pipeline-id">
+                <div>
+                    <label
+                        class="block text-[11px] font-black text-brand-secondary uppercase tracking-widest mb-1.5 ml-1">Pipeline
+                        Name</label>
+                    <input type="text" name="name" required placeholder="e.g. Final Year Projects"
+                        class="w-full px-4 py-3 bg-brand-bg/30 border border-brand-border/40 rounded-xl focus:ring-2 focus:ring-brand-primary/10 outline-none transition-all font-medium text-brand-text">
+                </div>
+                <div>
+                    <label
+                        class="block text-[11px] font-black text-brand-secondary uppercase tracking-widest mb-1.5 ml-1">Discovery Platform</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="relative cursor-pointer group">
+                            <input type="radio" name="platform" value="Google Maps" checked class="peer sr-only">
+                            <div class="p-3 border border-brand-border/40 bg-brand-bg/20 rounded-xl peer-checked:border-brand-primary peer-checked:bg-brand-primary/5 transition-all flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                    <i data-lucide="map-pin" class="w-4.5 h-4.5"></i>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-xs font-bold text-brand-text">Google Maps</span>
+                                    <span class="text-[9px] text-brand-secondary">Local Businesses</span>
+                                </div>
+                            </div>
+                        </label>
+                        <label class="relative cursor-pointer group">
+                            <input type="radio" name="platform" value="Reddit" class="peer sr-only">
+                            <div class="p-3 border border-brand-border/40 bg-brand-bg/20 rounded-xl peer-checked:border-brand-primary peer-checked:bg-brand-primary/5 transition-all flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                    <i data-lucide="message-square" class="w-4.5 h-4.5"></i>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-xs font-bold text-brand-text">Reddit</span>
+                                    <span class="text-[9px] text-brand-secondary">Global Students</span>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label
+                            class="block text-[11px] font-black text-brand-secondary uppercase tracking-widest mb-1.5 ml-1" id="label-industry">Keywords / Industry</label>
+                        <input type="text" name="industry" required placeholder="e.g. final year projects"
+                            class="w-full px-4 py-3 bg-brand-bg/30 border border-brand-border/40 rounded-xl focus:ring-2 focus:ring-brand-primary/10 outline-none transition-all font-medium text-brand-text">
+                    </div>
+                    <div>
+                        <label
+                            class="block text-[11px] font-black text-brand-secondary uppercase tracking-widest mb-1.5 ml-1">Location</label>
+                        <input type="text" name="location" required placeholder="e.g. Miami, FL"
+                            class="w-full px-4 py-3 bg-brand-bg/30 border border-brand-border/40 rounded-xl focus:ring-2 focus:ring-brand-primary/10 outline-none transition-all font-medium text-brand-text">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label
+                            class="block text-[11px] font-black text-brand-secondary uppercase tracking-widest mb-1.5 ml-1">Min.
+                            Star Rating</label>
+                        <select name="minimum_rating"
+                            class="w-full px-4 py-3 bg-brand-bg/30 border border-brand-border/40 rounded-xl focus:ring-2 focus:ring-brand-primary/10 outline-none transition-all font-medium text-brand-text appearance-none cursor-pointer">
+                            <option value="0">Show All</option>
+                            <option value="3" selected>3.0+ Stars</option>
+                            <option value="4">4.0+ Stars</option>
+                            <option value="4.5">4.5+ Stars</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label
+                            class="block text-[11px] font-black text-brand-secondary uppercase tracking-widest mb-1.5 ml-1">Website
+                            Req.</label>
+                        <select name="requires_website"
+                            class="w-full px-4 py-3 bg-brand-bg/30 border border-brand-border/40 rounded-xl focus:ring-2 focus:ring-brand-primary/10 outline-none transition-all font-medium text-brand-text appearance-none cursor-pointer">
+                            <option value="false">Not Required</option>
+                            <option value="true">Must Have Website</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="pt-4 flex gap-3">
+                    <button type="button" onclick="closePipelineModal()"
+                        class="flex-1 py-3 px-4 border border-brand-border rounded-xl text-sm font-bold text-brand-secondary hover:bg-brand-bg transition-all">Cancel</button>
+                    <button type="submit" id="save-pipeline-btn"
+                        class="flex-[2] py-3 px-4 bg-brand-primary text-white rounded-xl text-sm font-bold shadow-lg shadow-brand-primary/20 hover:scale-[1.01] active:scale-[0.99] transition-all">
+                        Save Pipeline
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function openPipelineModal() {
+        document.getElementById('modal-title').innerText = 'Create New Pipeline';
+        document.getElementById('pipeline-id').value = '';
+        document.getElementById('pipeline-form').reset();
+        
+        // Reset platform-specific fields visibility
+        togglePlatformFields('Google Maps');
+        
+        document.getElementById('pipeline-modal').classList.remove('hidden');
+    }
+
+    // Add listener for platform change
+    document.querySelectorAll('input[name="platform"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            togglePlatformFields(e.target.value);
+        });
+    });
+
+    function togglePlatformFields(platform) {
+        const ratingField = document.querySelector('select[name="minimum_rating"]').closest('div');
+        const websiteField = document.querySelector('select[name="requires_website"]').closest('div');
+        const locationInput = document.querySelector('input[name="location"]');
+        const industryLabel = document.getElementById('label-industry');
+        
+        if (platform === 'Reddit') {
+            ratingField.style.opacity = '0.4';
+            ratingField.style.pointerEvents = 'none';
+            websiteField.style.opacity = '0.4';
+            websiteField.style.pointerEvents = 'none';
+            locationInput.value = 'Global';
+            locationInput.readOnly = true;
+            industryLabel.innerText = 'Search Keywords (e.g. final year project)';
+        } else {
+            ratingField.style.opacity = '1';
+            ratingField.style.pointerEvents = 'auto';
+            websiteField.style.opacity = '1';
+            websiteField.style.pointerEvents = 'auto';
+            locationInput.readOnly = false;
+            if (locationInput.value === 'Global') locationInput.value = '';
+            industryLabel.innerText = 'Industry';
+        }
+    }
+
+    function openEditPipelineModalFromBtn(btn) {
+        const id = btn.getAttribute('data-id');
+        const name = btn.getAttribute('data-name');
+        const industry = btn.getAttribute('data-industry');
+        const location = btn.getAttribute('data-location');
+        const platform = btn.getAttribute('data-platform') || 'Google Maps';
+        const rating = btn.getAttribute('data-rating');
+        const website = btn.getAttribute('data-website') === 'true';
+        openEditPipelineModal(id, name, industry, location, platform, rating, website);
+    }
+
+    function openEditPipelineModal(id, name, industry, location, platform, rating, requiresWebsite) {
+        document.getElementById('modal-title').innerText = 'Edit Pipeline Configuration';
+        document.getElementById('pipeline-id').value = id;
+
+        const form = document.getElementById('pipeline-form');
+        form.name.value = name;
+        form.industry.value = industry;
+        form.location.value = location;
+        form.platform.value = platform;
+        form.minimum_rating.value = rating;
+        form.requires_website.value = requiresWebsite ? 'true' : 'false';
+
+        togglePlatformFields(platform);
+        document.getElementById('pipeline-modal').classList.remove('hidden');
+    }
+
+    function closePipelineModal() {
+        document.getElementById('pipeline-modal').classList.add('hidden');
+    }
+
+    function savePipeline(e) {
+        e.preventDefault();
+        const form = e.target;
+        const id = form.id.value;
+        const btn = document.getElementById('save-pipeline-btn');
+        const originalText = btn.innerText;
+
+        const data = {
+            name: form.name.value,
+            industry: form.industry.value,
+            location: form.location.value,
+            platform: form.platform.value,
+            minimum_rating: form.minimum_rating.value,
+            requires_website: form.requires_website.value === 'true'
+        };
+
+        btn.disabled = true;
+        btn.innerText = 'Saving...';
+
+        const url = id ? `/api/pipelines/${id}` : '/api/pipelines/';
+        const method = id ? 'PUT' : 'POST';
+
+        fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+            .then(r => {
+                if (!r.ok) throw new Error('Failed to save pipeline');
+                return r.json();
+            })
+            .then(() => {
+                closePipelineModal();
+                htmx.trigger('#pipelines-grid', 'load');
+            })
+            .catch(err => alert(err.message))
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerText = originalText;
+            });
+    }
+
+    function deletePipeline(id) {
+        if (!confirm('Are you sure you want to permanently delete this discovery pipeline? All historical run data for this specific configuration will be lost.')) return;
+        fetch(`/api/pipelines/${id}`, { method: 'DELETE' })
+            .then(r => {
+                if (!r.ok) throw new Error('Delete failed');
+                htmx.trigger('#pipelines-grid', 'load');
+            })
+            .catch(err => alert(err.message));
+    }
+
+    function togglePipeline(id, newState) {
+        fetch(`/api/pipelines/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ is_active: newState })
+        }).then(() => {
+            // No need to reload entire grid to avoid flickering, 
+            // but we might want to update local state if needed.
+        });
+    }
+
+    function runPipeline(id, event) {
+        const btn = event.currentTarget;
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> Running Engine...';
+        btn.disabled = true;
+
+        fetch(`/api/pipelines/${id}/run`, { method: 'POST' })
+            .then(r => {
+                if (!r.ok) throw new Error('Server error starting scraper');
+                return r.json();
+            })
+            .then(data => {
+                // Show a non-blocking toast or simple alert
+                alert(`🚀 Scraping job dispatched for "${data.pipeline}". New leads will be streamed into your CRM dashboard automatically.`);
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+                if (window.lucide) lucide.createIcons();
+            })
+            .catch(err => {
+                alert(err.message);
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+                if (window.lucide) lucide.createIcons();
+            });
+    }
+</script>
+{% endblock %}

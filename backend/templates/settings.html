@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}Settings — LeadGen CRM{% endblock %}
+{% block page_title %}Settings{% endblock %}
+{% block page_subtitle %}Configure your CRM preferences{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl space-y-6">
+
+    <!-- Header -->
+    <div>
+        <h3 class="text-lg font-bold text-brand-text mb-1">Email Outreach Settings</h3>
+        <p class="text-sm text-brand-secondary">Configure how your AI-generated emails are drafted when using the
+            outreach tool.</p>
+    </div>
+
+    <!-- Outreach Settings Card -->
+    <div class="card p-6 border-t-4 border-t-brand-primary">
+        <form id="settings-form" class="space-y-6">
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Sender Name -->
+                <div class="space-y-2">
+                    <label class="block text-sm font-semibold text-brand-text">Sender Name</label>
+                    <input type="text" id="setting-sender-name"
+                        class="w-full px-4 py-2 border border-brand-border rounded-lg focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary outline-none transition-all"
+                        placeholder="e.g. John Doe" required>
+                    <p class="text-xs text-brand-secondary">This will appear in your default CRM templates.</p>
+                </div>
+
+                <!-- Reply-To Email -->
+                <div class="space-y-2">
+                    <label class="block text-sm font-semibold text-brand-text">Reply-To Email</label>
+                    <input type="email" id="setting-reply-to"
+                        class="w-full px-4 py-2 border border-brand-border rounded-lg focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary outline-none transition-all"
+                        placeholder="john@example.com" required>
+                    <p class="text-xs text-brand-secondary">The email address prospects will reply to.</p>
+                </div>
+            </div>
+
+            <!-- Email Signature -->
+            <div class="space-y-2">
+                <label class="block text-sm font-semibold text-brand-text flex items-center justify-between">
+                    <span>Email Signature</span>
+                </label>
+                <textarea id="setting-signature" rows="4"
+                    class="w-full px-4 py-3 border border-brand-border rounded-lg focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary outline-none transition-all resize-none"
+                    placeholder="Best,&#10;John Doe&#10;CEO | Example Corp"></textarea>
+                <p class="text-xs text-brand-secondary">Injected at the bottom of all AI-generated outreach templates.
+                </p>
+            </div>
+
+            <!-- Actions -->
+            <div class="pt-4 border-t border-brand-border flex items-center justify-end gap-3">
+                <span id="save-status" class="text-sm font-medium text-emerald-600 opacity-0 transition-opacity">Saved
+                    successfully!</span>
+                <button type="submit" class="btn-primary" id="save-btn">
+                    <i data-lucide="save" class="w-4 h-4"></i>
+                    <span>Save Settings</span>
+                </button>
+            </div>
+        </form>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Load existing settings
+    document.addEventListener('DOMContentLoaded', () => {
+        fetch('/api/users/settings')
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById('setting-sender-name').value = data.sender_name || '';
+                document.getElementById('setting-reply-to').value = data.reply_to_email || '';
+                document.getElementById('setting-signature').value = data.email_signature || '';
+            })
+            .catch(err => console.error("Failed to load settings:", err));
+    });
+
+    // Save settings
+    document.getElementById('settings-form').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const btn = document.getElementById('save-btn');
+        const status = document.getElementById('save-status');
+
+        btn.disabled = true;
+        btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i><span>Saving...</span>`;
+        if (window.lucide) lucide.createIcons();
+
+        const payload = {
+            sender_name: document.getElementById('setting-sender-name').value,
+            reply_to_email: document.getElementById('setting-reply-to').value,
+            email_signature: document.getElementById('setting-signature').value
+        };
+
+        fetch('/api/users/settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+            .then(r => {
+                if (!r.ok) throw new Error('Failed to save');
+                return r.json();
+            })
+            .then(() => {
+                // Show success
+                status.classList.remove('opacity-0');
+                setTimeout(() => status.classList.add('opacity-0'), 3000);
+            })
+            .catch(err => {
+                alert('Error saving settings. Please try again.');
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerHTML = `<i data-lucide="save" class="w-4 h-4"></i><span>Save Settings</span>`;
+                if (window.lucide) lucide.createIcons();
+            });
+    });
+</script>
+{% endblock %}

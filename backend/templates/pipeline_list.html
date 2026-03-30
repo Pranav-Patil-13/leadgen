@@ -1,0 +1,118 @@
+{% for p in pipelines %}
+<div class="group relative bg-brand-card border border-brand-border/40 rounded-2xl p-6 shadow-sm hover:shadow-xl hover:border-brand-primary/20 transition-all duration-300 flex flex-col h-full"
+    id="pipeline-{{ p.id }}">
+
+    <!-- Status Flag -->
+    <div class="absolute -top-3 left-6">
+        <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm flex items-center gap-1.5
+            {{ 'bg-emerald-100 text-emerald-700' if p.is_active else 'bg-slate-100 text-slate-500' }}">
+            <div
+                class="w-1.5 h-1.5 rounded-full {{ 'bg-emerald-500 animate-pulse' if p.is_active else 'bg-slate-400' }}">
+            </div>
+            {{ 'Active' if p.is_active else 'Paused' }}
+        </span>
+    </div>
+
+    <!-- Actions Menu (Floating) -->
+    <div class="absolute -top-4 right-4 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <button data-id="{{ p.id }}" data-name="{{ p.name }}" data-industry="{{ p.industry }}"
+            data-location="{{ p.location }}" data-platform="{{ p.platform }}" data-rating="{{ p.minimum_rating }}"
+            data-website="{{ 'true' if p.requires_website else 'false' }}" onclick="openEditPipelineModalFromBtn(this)"
+            class="p-1.5 rounded-lg hover:bg-brand-bg text-brand-secondary hover:text-brand-primary transition-colors"
+            title="Edit Pipeline">
+            <i data-lucide="edit-3" class="w-4 h-4"></i>
+        </button>
+        <button onclick="deletePipeline('{{ p.id }}')"
+            class="p-1.5 rounded-lg hover:bg-rose-50 text-brand-secondary hover:text-rose-500 transition-colors"
+            title="Delete">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+        </button>
+    </div>
+
+    <!-- Header Content -->
+    <div class="mb-4 pt-2">
+        <h3 class="text-base font-bold text-brand-text truncate pr-12">{{ p.name }}</h3>
+        <div class="flex items-center gap-2 mt-1">
+            <span class="text-xs text-brand-secondary/70 font-medium uppercase tracking-wide flex items-center gap-1.5">
+                <i data-lucide="crosshair" class="w-3 h-3 text-brand-primary/60"></i>
+                {{ p.industry }}
+            </span>
+            <span class="w-1 h-1 rounded-full bg-brand-border/60"></span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-brand-bg border border-brand-border/40 font-bold text-brand-secondary flex items-center gap-1">
+                {% if p.platform == 'Reddit' %}
+                <i data-lucide="message-square" class="w-2.5 h-2.5 text-orange-500"></i>
+                Reddit
+                {% else %}
+                <i data-lucide="map-pin" class="w-2.5 h-2.5 text-emerald-500"></i>
+                Google Maps
+                {% endif %}
+            </span>
+        </div>
+    </div>
+
+    <!-- Configuration Details -->
+    <div class="space-y-3 mb-6">
+        <div class="flex items-center justify-between text-xs py-2 border-b border-brand-border/20">
+            <span class="text-brand-secondary font-medium">Target Location</span>
+            <span class="text-brand-text font-bold flex items-center gap-1">
+                <i data-lucide="map-pin" class="w-3 h-3 text-brand-primary/50"></i>
+                {{ p.location }}
+            </span>
+        </div>
+        <div class="flex items-center justify-between text-xs py-2 border-b border-brand-border/20">
+            <span class="text-brand-secondary font-medium">Filters</span>
+            <div class="flex gap-1.5">
+                <span
+                    class="px-1.5 py-0.5 bg-brand-bg rounded text-[10px] font-bold text-brand-secondary border border-brand-border/40">
+                    {{ p.minimum_rating }}+ Stars
+                </span>
+                {% if p.requires_website %}
+                <span
+                    class="px-1.5 py-0.5 bg-brand-bg rounded text-[10px] font-bold text-brand-secondary border border-brand-border/40">
+                    Website Only
+                </span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="flex items-center justify-between text-xs py-2">
+            <span class="text-brand-secondary font-medium">Total Leads Found</span>
+            <span class="text-brand-primary font-black text-sm">{{ p.total_leads_found }}</span>
+        </div>
+    </div>
+
+    <!-- Footer Actions -->
+    <div class="mt-auto pt-4 flex items-center justify-between border-t border-brand-border/20">
+        <div class="flex items-center gap-2">
+            <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" class="sr-only peer" {{ "checked" if p.is_active else "" }}
+                    onchange="togglePipeline('{{ p.id }}', this.checked)">
+                <div
+                    class="w-8 h-4.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-emerald-500">
+                </div>
+            </label>
+            <span class="text-[10px] font-bold text-brand-secondary uppercase tracking-tighter">Engine Enabled</span>
+        </div>
+
+        <button onclick="runPipeline('{{ p.id }}', event)"
+            class="px-4 py-2 bg-brand-primary/10 text-brand-primary rounded-xl text-xs font-black uppercase tracking-widest hover:bg-brand-primary hover:text-white transition-all flex items-center gap-2 group/run">
+            <i data-lucide="zap" class="w-3.5 h-3.5 fill-current"></i>
+            Run Discovery
+        </button>
+    </div>
+</div>
+{% endfor %}
+
+{% if not pipelines %}
+<div class="col-span-full py-20 bg-white/40 border border-dashed border-brand-border rounded-3xl text-center">
+    <div class="w-16 h-16 bg-brand-bg rounded-2xl flex items-center justify-center mx-auto mb-4">
+        <i data-lucide="layers" class="w-8 h-8 text-brand-secondary/40"></i>
+    </div>
+    <h3 class="text-lg font-bold text-brand-text">No pipelines created yet</h3>
+    <p class="text-brand-secondary max-w-xs mx-auto mt-2 text-sm leading-relaxed">Pipelines automatically scour the web
+        to find new high-quality leads based on your custom industry criteria.</p>
+</div>
+{% endif %}
+
+<script>
+    if (window.lucide) lucide.createIcons();
+</script>

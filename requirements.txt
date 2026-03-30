@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+psycopg2-binary
+alembic
+celery
+redis
+jinja2
+python-multipart
+beautifulsoup4
+requests
+playwright
+python-dotenv

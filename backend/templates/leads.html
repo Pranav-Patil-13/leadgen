@@ -1,0 +1,874 @@
+{% extends "base.html" %}
+
+{% block title %}Leads — LeadGen CRM{% endblock %}
+{% block page_title %}Leads{% endblock %}
+{% block page_subtitle %}Manage and track all your discovered leads{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="/static/css/leads.css?v=1.1">
+{% endblock %}
+
+{% block content %}
+<!-- Filters Bar -->
+<div class="filter-bar">
+    <div class="filter-row">
+        <!-- Prominent Search -->
+        <div class="search-container group">
+            <i data-lucide="search" class="search-icon"></i>
+            <input type="text" id="search-leads" name="search" placeholder="Search leads by name or city..."
+                class="search-input"
+                hx-get="/api/leads/" hx-trigger="keyup changed delay:300ms, search" hx-target="#leads-view-container"
+                hx-include="#filter-status, #filter-pipeline, #search-leads, #filter-assignee, #current-view">
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Filter Chips Group -->
+        <div class="filter-select-group">
+            <!-- Status Dropdown -->
+            <div class="filter-select-wrapper">
+                <select id="filter-status" name="status" class="filter-select"
+                    hx-get="/api/leads/" hx-trigger="change" hx-target="#leads-view-container"
+                    hx-include="#filter-status, #filter-city, #filter-pipeline, #search-leads, #filter-assignee, #current-view"
+                    hx-swap="innerHTML">
+                    <option value="">All Statuses</option>
+                    <option value="New Lead">New Lead</option>
+                    <option value="Contacted">Contacted</option>
+                    <option value="Interested">Interested</option>
+                    <option value="Follow-up">Follow-up</option>
+                    <option value="Closed Deal">Closed Deal</option>
+                    <option value="Rejected">Rejected</option>
+                </select>
+                <i data-lucide="chevron-down" class="filter-select-icon"></i>
+            </div>
+
+
+            <!-- Pipeline Dropdown -->
+            <div class="filter-select-wrapper">
+                <select id="filter-pipeline" name="pipeline_id" class="filter-select"
+                    hx-get="/api/leads/" hx-trigger="change" hx-target="#leads-view-container"
+                    hx-include="#filter-status, #filter-pipeline, #search-leads, #filter-assignee, #current-view">
+                    <option value="">Pipelines</option>
+                </select>
+                <i data-lucide="chevron-down" class="filter-select-icon"></i>
+            </div>
+
+            <!-- Assignee Dropdown -->
+            <div class="filter-select-wrapper">
+                <select id="filter-assignee" name="assigned_user_id" class="filter-select"
+                    hx-get="/api/leads/" hx-trigger="change" hx-target="#leads-view-container"
+                    hx-include="#filter-status, #filter-pipeline, #search-leads, #filter-assignee, #current-view">
+                    <option value="">Assignee</option>
+                </select>
+                <i data-lucide="chevron-down" class="filter-select-icon"></i>
+            </div>
+
+            <button onclick="clearAllFilters()" class="btn-export" title="Reset Filters" style="width: 2.75rem; justify-content: center; padding: 0;">
+                <i data-lucide="rotate-ccw" style="width: 14px; height: 14px;"></i>
+            </button>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- View Toggle -->
+        <div class="view-toggle">
+            <button id="view-table-btn" class="toggle-btn active" onclick="switchView('table')">
+                <i data-lucide="list" style="width: 14px; height: 14px;"></i>
+                List
+            </button>
+            <button id="view-board-btn" class="toggle-btn" onclick="switchView('board')">
+                <i data-lucide="layout-grid" style="width: 14px; height: 14px;"></i>
+                Board
+            </button>
+            <input type="hidden" id="current-view" name="view" value="table">
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Primary Actions -->
+        <div class="filter-select-group">
+            <button onclick="exportToCSV()" class="btn-export" title="Export to CSV">
+                <i data-lucide="download" style="width: 16px; height: 16px;"></i>
+            </button>
+            <button id="add-lead-btn" onclick="openAddLeadModal()" class="btn-new-lead">
+                <i data-lucide="plus" style="width: 16px; height: 16px;"></i>
+                New Lead
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Actions Bar (Hidden by default) -->
+<div id="bulk-actions-bar"
+    class="bg-brand-primary text-white px-6 py-3 rounded-xl mb-6 flex items-center justify-between shadow-lg transition-all duration-300 translate-y-4 opacity-0 pointer-events-none hidden">
+    <div class="flex items-center gap-4">
+        <span class="text-sm font-semibold"><span id="selected-count">0</span> leads selected</span>
+        <div class="h-4 w-[1px] bg-white/20"></div>
+        <div class="flex items-center gap-2 pr-4 border-r border-white/20">
+            <label class="text-xs uppercase tracking-wider opacity-70">Status:</label>
+            <select id="bulk-status-select"
+                class="text-sm bg-white/10 border border-white/20 rounded-lg px-2 py-1 focus:outline-none">
+                <option value="New Lead" class="text-brand-text">New Lead</option>
+                <option value="Contacted" class="text-brand-text">Contacted</option>
+                <option value="Interested" class="text-brand-text">Interested</option>
+                <option value="Follow-up" class="text-brand-text">Follow-up</option>
+                <option value="Closed Deal" class="text-brand-text">Closed Deal</option>
+                <option value="Rejected" class="text-brand-text">Rejected</option>
+            </select>
+            <button onclick="applyBulkStatus()"
+                class="bg-white text-brand-primary px-3 py-1 rounded-lg text-sm font-bold hover:bg-opacity-90 transition-all">Apply</button>
+        </div>
+        <div class="flex items-center gap-2 pr-4 border-r border-white/20">
+            <label class="text-xs uppercase tracking-wider opacity-70">Assign to:</label>
+            <select id="bulk-assign-select"
+                class="text-sm bg-white/10 border border-white/20 rounded-lg px-2 py-1 focus:outline-none max-w-[140px]">
+                <option value="" class="text-brand-text">Unassigned</option>
+            </select>
+            <button onclick="applyBulkAssign()"
+                class="bg-white text-brand-primary px-3 py-1 rounded-lg text-sm font-bold hover:bg-opacity-90 transition-all">Assign</button>
+        </div>
+        <div class="flex items-center gap-2">
+            <label class="text-xs uppercase tracking-wider opacity-70">Campaign:</label>
+            <select id="bulk-campaign-select"
+                class="text-sm bg-white/10 border border-white/20 rounded-lg px-2 py-1 focus:outline-none max-w-[140px]">
+                <option value="" class="text-brand-text">Select Sequence</option>
+            </select>
+            <button onclick="applyBulkCampaign()"
+                class="bg-white text-brand-primary px-3 py-1 rounded-lg text-sm font-bold hover:bg-opacity-90 transition-all">Start</button>
+        </div>
+    </div>
+    <button onclick="clearSelection()" class="text-xs hover:underline opacity-70">Cancel Selection</button>
+</div>
+
+<!-- Leads View Toggle & Container -->
+<style>
+    .view-btn.active-view {
+        background-color: var(--brand-primary);
+        color: white;
+        box-shadow: 0 4px 10px rgba(74, 78, 105, 0.2);
+    }
+    /* Native fix for container background depending on view */
+    #leads-view-container:has(#kanban-board) {
+        background-color: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+</style>
+
+<div id="leads-view-container" class="view-container"
+    hx-get="/api/leads/" hx-trigger="every 10s"
+    hx-target="this"
+    hx-include="#filter-status, #filter-pipeline, #search-leads, #filter-assignee, #current-view"
+    hx-swap="innerHTML"
+    hx-indicator="#polling-indicator">
+    <!-- Initial Loading State -->
+    <div class="py-24 text-center text-brand-secondary">
+        <i data-lucide="loader-2" class="w-8 h-8 mx-auto mb-4 animate-spin opacity-40"></i>
+        <span class="text-sm font-medium tracking-wide">Orchestrating Leads...</span>
+    </div>
+</div>
+
+<script>
+    function switchView(viewType) {
+        document.getElementById('current-view').value = viewType;
+        localStorage.setItem('preferredLeadsView', viewType);
+        
+        const container = document.getElementById('leads-view-container');
+        
+        // Update UI buttons
+        const tableBtn = document.getElementById('view-table-btn');
+        const boardBtn = document.getElementById('view-board-btn');
+        
+        if (viewType === 'table') {
+            tableBtn.classList.add('active');
+            boardBtn.classList.remove('active');
+            container.classList.remove('board-mode');
+        } else {
+            boardBtn.classList.add('active');
+            tableBtn.classList.remove('active');
+            container.classList.add('board-mode');
+        }
+        
+        // Trigger HTMX refresh with new view
+        htmx.ajax('GET', '/api/leads/', {
+            target: '#leads-view-container',
+            values: { 
+                view: viewType,
+                search: document.getElementById('search-leads').value,
+                status: document.getElementById('filter-status').value,
+                pipeline_id: document.getElementById('filter-pipeline').value,
+                assigned_user_id: document.getElementById('filter-assignee').value
+            }
+        });
+    }
+</script>
+
+<!-- Lead Detail Drawer (Hidden by default) -->
+<div id="lead-drawer" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/20" onclick="closeDrawer()"></div>
+    <div
+        class="absolute right-0 top-0 h-full w-[480px] bg-brand-card border-l border-brand-border shadow-xl overflow-y-auto">
+        <div class="p-6" id="lead-drawer-content">
+            <!-- Populated dynamically -->
+        </div>
+    </div>
+</div>
+
+<!-- Add Lead Modal -->
+<div id="add-lead-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center">
+    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeAddLeadModal()"></div>
+    <div class="bg-brand-card shadow-2xl rounded-2xl w-full max-w-lg z-10 flex flex-col max-h-[90vh]">
+        <div class="flex items-center justify-between p-6 border-b border-brand-border">
+            <h3 class="text-lg font-semibold text-brand-text">Add New Lead</h3>
+            <button onclick="closeAddLeadModal()"
+                class="p-1 rounded text-brand-secondary hover:bg-brand-hover hover:text-brand-text transition-colors">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+        <div class="p-6 overflow-y-auto">
+            <form id="add-lead-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-brand-text mb-1">Company Name *</label>
+                    <input type="text" name="company_name" required
+                        class="w-full text-sm border border-brand-border rounded-lg px-3 py-2 bg-brand-bg focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/20">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-brand-text mb-1">Assigned Pipeline *</label>
+                    <select name="pipeline_id" id="modal-pipeline-select" required
+                        class="w-full text-sm border border-brand-border rounded-lg px-3 py-2 bg-brand-bg focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/20">
+                        <option value="">Select a Pipeline</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-brand-text mb-1">Assign to Agent</label>
+                    <select name="assigned_user_id" id="modal-assignee-select"
+                        class="w-full text-sm border border-brand-border rounded-lg px-3 py-2 bg-brand-bg focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/20">
+                        <option value="">Unassigned</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-brand-text mb-1">Email</label>
+                        <input type="email" name="email"
+                            class="w-full text-sm border border-brand-border rounded-lg px-3 py-2 bg-brand-bg focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/20">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-brand-text mb-1">Phone</label>
+                        <input type="text" name="phone"
+                            class="w-full text-sm border border-brand-border rounded-lg px-3 py-2 bg-brand-bg focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/20">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-brand-text mb-1">Website URL</label>
+                    <input type="url" name="website"
+                        class="w-full text-sm border border-brand-border rounded-lg px-3 py-2 bg-brand-bg focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/20">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-brand-text mb-1">City / Location</label>
+                    <input type="text" name="city"
+                        class="w-full text-sm border border-brand-border rounded-lg px-3 py-2 bg-brand-bg focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/20">
+                </div>
+                <div class="pt-4 flex justify-end gap-3">
+                    <button type="button" onclick="closeAddLeadModal()"
+                        class="px-4 py-2 text-sm font-medium text-brand-secondary bg-white border border-brand-border rounded-lg hover:bg-brand-bg">Cancel</button>
+                    <button type="submit"
+                        class="px-4 py-2 text-sm font-medium text-white bg-brand-primary rounded-lg hover:brightness-90 transition-all shadow-sm">Save
+                        Lead</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Email Outreach Modal -->
+<div id="email-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center">
+    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeEmailModal()"></div>
+    <div class="bg-brand-card shadow-2xl rounded-2xl w-full max-w-2xl z-10 flex flex-col mx-4 max-h-[90vh]">
+        <div class="flex items-center justify-between p-6 border-b border-brand-border bg-brand-bg/50 rounded-t-2xl">
+            <div>
+                <h3 class="text-lg font-semibold text-brand-text flex items-center gap-2">
+                    <i data-lucide="mail" class="w-5 h-5 text-brand-primary"></i>
+                    Email Outreach
+                </h3>
+                <p class="text-xs text-brand-secondary mt-1" id="email-modal-subtitle">Drafting...</p>
+            </div>
+            <button onclick="closeEmailModal()"
+                class="p-1 rounded text-brand-secondary hover:bg-brand-hover hover:text-brand-text transition-colors">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+        <div class="p-6 overflow-y-auto">
+            <input type="hidden" id="email-lead-id">
+            <div class="space-y-4">
+                <div>
+                    <label
+                        class="block text-xs font-bold text-brand-secondary uppercase tracking-widest mb-1.5 ml-1">To</label>
+                    <input type="email" id="email-to" readonly
+                        class="w-full text-sm border border-brand-border rounded-xl px-4 py-3 bg-brand-bg/50 text-brand-text/60 focus:outline-none cursor-not-allowed">
+                </div>
+                <div>
+                    <label
+                        class="block text-xs font-bold text-brand-secondary uppercase tracking-widest mb-1.5 ml-1">Subject</label>
+                    <input type="text" id="email-subject"
+                        class="w-full text-sm border border-brand-border rounded-xl px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/20 text-brand-text shadow-sm transition-all">
+                </div>
+                <div>
+                    <label
+                        class="block text-xs font-bold text-brand-secondary uppercase tracking-widest mb-1.5 ml-1">Message</label>
+                    <textarea id="email-body" rows="8"
+                        class="w-full text-sm border border-brand-border rounded-xl px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/20 text-brand-text shadow-sm transition-all resize-none"></textarea>
+                </div>
+            </div>
+        </div>
+        <div class="p-6 border-t border-brand-border bg-brand-bg/50 rounded-b-2xl flex items-center justify-between">
+            <span class="text-xs text-brand-secondary flex items-center gap-1.5">
+                <i data-lucide="sparkles" class="w-3.5 h-3.5 text-brand-primary"></i> AI Generated Draft
+            </span>
+            <div class="flex gap-3">
+                <button type="button" onclick="closeEmailModal()"
+                    class="px-5 py-2.5 text-sm font-bold text-brand-secondary bg-white border border-brand-border rounded-xl hover:bg-brand-bg transition-all">Cancel</button>
+                <button type="button" onclick="sendEmail()"
+                    class="px-6 py-2.5 text-sm font-bold text-white bg-brand-primary rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg flex items-center gap-2">
+                    <i data-lucide="send" class="w-4 h-4"></i> Send Email
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function formatLocalISOString(dateStr) {
+        if (!dateStr) return '';
+        const d = new Date(dateStr + (dateStr.endsWith('Z') ? '' : 'Z'));
+        const tzOffset = d.getTimezoneOffset() * 60000;
+        return new Date(d.getTime() - tzOffset).toISOString().slice(0, 16);
+    }
+
+    let syncIndicatorTimeout;
+    let teamMembers = [];
+
+    function fetchTeam() {
+        fetch('/api/users/')
+            .then(res => res.json())
+            .then(users => {
+                teamMembers = users;
+
+                // Update bulk assign dropdown
+                const bulkSelect = document.getElementById('bulk-assign-select');
+                if (bulkSelect) {
+                    bulkSelect.innerHTML = '<option value="">Unassigned</option>' + users.map(u =>
+                        `<option value="${u.id}" class="text-brand-text">${u.full_name || u.email}</option>`
+                    ).join('');
+                }
+
+                // Update modal assignee dropdown
+                const modalSelect = document.getElementById('modal-assignee-select');
+                if (modalSelect) {
+                    modalSelect.innerHTML = '<option value="">Unassigned</option>' + users.map(u =>
+                        `<option value="${u.id}">${u.full_name || u.email}</option>`
+                    ).join('');
+                }
+            });
+    }
+
+
+
+    document.body.addEventListener('htmx:beforeRequest', function (evt) {
+        if (evt.detail.elt.id === 'leads-table-body') {
+            const ind = document.getElementById('polling-indicator');
+            if (ind) {
+                clearTimeout(syncIndicatorTimeout);
+                ind.style.opacity = '1';
+            }
+        }
+    });
+
+    document.body.addEventListener('htmx:afterSettle', function (evt) {
+        if (evt.detail.elt.id === 'leads-table-body') {
+            const ind = document.getElementById('polling-indicator');
+            if (ind) {
+                // Disappear as soon as the DOM has settled and final leads are visible
+                syncIndicatorTimeout = setTimeout(() => {
+                    ind.style.opacity = '0';
+                }, 400); // Tiny grace period so it doesn't just look like a glitchy 1-frame flash
+            }
+        }
+    });
+
+    function openDrawer(leadId) {
+        document.getElementById('lead-drawer').classList.remove('hidden');
+        // Fetch lead details via HTMX or fetch API
+        fetch(`/api/leads/${leadId}`)
+            .then(r => r.json())
+            .then(lead => {
+                document.getElementById('lead-drawer-content').innerHTML = `
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-lg font-semibold text-brand-text">${lead.company_name}</h3>
+                        <button onclick="closeDrawer()" class="p-1 rounded hover:bg-brand-hover">
+                            <i data-lucide="x" class="w-5 h-5 text-brand-secondary"></i>
+                        </button>
+                    </div>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-xs text-brand-secondary font-medium uppercase tracking-wider">Status</label>
+                            <select class="mt-1 w-full text-sm border border-brand-border rounded-lg px-3 py-2 bg-white text-brand-text"
+                                    onchange="updateLeadStatus(${lead.id}, this.value)">
+                                ${['New Lead', 'Contacted', 'Interested', 'Follow-up', 'Closed Deal', 'Rejected'].map(s =>
+                    `<option value="${s}" ${lead.status === s ? 'selected' : ''}>${s}</option>`
+                ).join('')}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-xs text-brand-secondary font-medium uppercase tracking-wider flex items-center gap-1.5"><i data-lucide="calendar" class="w-3 h-3"></i> Next Follow-up</label>
+                            <input type="datetime-local" value="${formatLocalISOString(lead.next_follow_up_date)}" 
+                                   onchange="updateLeadFollowUp(${lead.id}, this.value)" 
+                                   class="mt-1 w-full text-sm border border-brand-border rounded-lg px-3 py-2 bg-white text-brand-text">
+                        </div>
+                        <div>
+                            <label class="text-xs text-brand-secondary font-medium uppercase tracking-wider flex items-center gap-1.5"><i data-lucide="user" class="w-3 h-3"></i> Assigned To</label>
+                            <select class="mt-1 w-full text-sm border border-brand-border rounded-lg px-3 py-2 bg-white text-brand-text"
+                                    onchange="updateLeadAssignee(${lead.id}, this.value)">
+                                <option value="">Unassigned</option>
+                                ${teamMembers.map(u => `<option value="${u.id}" ${lead.assigned_user_id == u.id ? 'selected' : ''}>${u.full_name || u.email}</option>`).join('')}
+                            </select>
+                        </div>
+                        
+                        <!-- AI Insights Section -->
+                        <div class="p-4 bg-brand-bg/50 rounded-xl border border-brand-border/40">
+                            <div class="flex items-center justify-between mb-3">
+                                <label class="text-[10px] text-brand-secondary font-bold uppercase tracking-widest">AI Intelligence</label>
+                                <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider 
+                                    ${lead.ai_score_label === 'High' ? 'bg-emerald-100 text-emerald-700' :
+                        lead.ai_score_label === 'Medium' ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'}">
+                                    ${lead.ai_score_label} Quality
+                                </span>
+                            </div>
+                            <div class="flex items-end gap-2 mb-3">
+                                <span class="text-2xl font-black text-brand-text">${lead.ai_score}%</span>
+                                <span class="text-xs text-brand-secondary mb-1">Confidence Score</span>
+                            </div>
+                            <div class="flex flex-wrap gap-1.5">
+                                ${lead.opportunity_tags ? (() => {
+                        try {
+                            const tags = JSON.parse(lead.opportunity_tags);
+                            return tags.map(tag => `
+                                            <span class="px-2 py-1 bg-white border border-brand-border/30 rounded-md text-[10px] font-bold text-brand-secondary flex items-center gap-1 text-nowrap">
+                                                <i data-lucide="zap" class="w-2.5 h-2.5 text-brand-primary"></i>
+                                                ${tag}
+                                            </span>
+                                        `).join('');
+                        } catch (e) { return '<span class="text-[10px] text-brand-secondary">No flags detected.</span>'; }
+                    })() : '<span class="text-[10px] text-brand-secondary">No flags detected.</span>'}
+                            </div>
+                        </div>
+                        ${lead.phone ? `<div><label class="text-xs text-brand-secondary font-medium uppercase tracking-wider">Phone</label><p class="text-sm text-brand-text mt-1">${lead.phone}</p></div>` : ''}
+                        ${lead.email ? `
+                            <div>
+                                <label class="text-xs text-brand-secondary font-medium uppercase tracking-wider">Email</label>
+                                <div class="flex items-center gap-3 mt-1">
+                                    <p class="text-sm text-brand-text">${lead.email}</p>
+                                    <button onclick="openEmailModal(${lead.id}, '${lead.email}', '${lead.company_name.replace(/'/g, "\\'")}')" class="px-3 py-1 bg-brand-primary/10 text-brand-primary rounded-lg text-xs font-bold hover:bg-brand-primary/20 transition-colors flex items-center gap-1.5">
+                                        <i data-lucide="send" class="w-3 h-3"></i> Outreach
+                                    </button>
+                                </div>
+                            </div>
+                        ` : ''}
+                        ${lead.website ? `<div><label class="text-xs text-brand-secondary font-medium uppercase tracking-wider">Website</label><p class="text-sm text-brand-text mt-1"><a href="${lead.website}" target="_blank" class="text-brand-primary hover:underline">${lead.website}</a></p></div>` : ''}
+                        ${lead.google_maps_url ? `<div><label class="text-xs text-brand-secondary font-medium uppercase tracking-wider">Google Maps</label><p class="text-sm text-brand-text mt-1"><a href="${lead.google_maps_url}" target="_blank" class="text-brand-primary hover:underline">View on Maps</a></p></div>` : ''}
+                        ${lead.address ? `<div><label class="text-xs text-brand-secondary font-medium uppercase tracking-wider">Address</label><p class="text-sm text-brand-text mt-1">${lead.address}</p></div>` : ''}
+                        ${lead.social_links ? (() => {
+                        try {
+                            const socials = JSON.parse(lead.social_links);
+                            if (Object.keys(socials).length === 0) return '';
+                            return `<div>
+                                    <label class="text-xs text-brand-secondary font-medium uppercase tracking-wider mb-2 block">Social Presence</label>
+                                    <div class="flex items-center gap-3">
+                                        ${Object.entries(socials).map(([platform, url]) => {
+                                const iconMap = {
+                                    'linkedin': 'linkedin',
+                                    'twitter': 'twitter',
+                                    'facebook': 'facebook',
+                                    'instagram': 'instagram',
+                                    'youtube': 'youtube'
+                                };
+                                const icon = iconMap[platform] || 'link';
+                                return `<a href="${url}" target="_blank" class="text-brand-secondary hover:text-brand-primary transition-colors" title="${platform}">
+                                                <i data-lucide="${icon}" class="w-5 h-5"></i>
+                                            </a>`;
+                            }).join('')}
+                                    </div>
+                                </div>`;
+                        } catch (e) { return ''; }
+                    })() : ''}
+                        <div class="pt-4 border-t border-brand-border">
+                            <h4 class="text-xs text-brand-secondary font-medium uppercase tracking-wider mb-3">Notes</h4>
+                            <div id="lead-notes-list" class="space-y-2 mb-3"></div>
+                            <div class="flex gap-2">
+                                <input type="text" id="new-note-input" placeholder="Add a note..."
+                                       class="flex-1 text-sm border border-brand-border rounded-lg px-3 py-2 bg-white text-brand-text focus:outline-none">
+                                <button onclick="addNote(${lead.id})" class="px-3 py-2 bg-brand-primary text-white text-sm rounded-lg hover:opacity-90">Add</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                lucide.createIcons();
+                loadNotes(lead.id);
+            });
+    }
+
+    function closeDrawer() {
+        document.getElementById('lead-drawer').classList.add('hidden');
+    }
+
+    function updateLeadStatus(leadId, newStatus) {
+        fetch(`/api/leads/${leadId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: newStatus })
+        }).then(() => {
+            // Refresh table
+            htmx.trigger('#leads-table-body', 'load');
+        });
+    }
+
+    function updateLeadAssignee(leadId, userId) {
+        fetch(`/api/leads/${leadId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ assigned_user_id: userId ? parseInt(userId) : null })
+        }).then(() => {
+            htmx.trigger('#leads-table-body', 'load');
+        });
+    }
+
+    function updateLeadFollowUp(leadId, dateStr) {
+        // Convert local HTML5 datetime to UTC ISO string
+        let payload = { next_follow_up_date: null };
+        if (dateStr) {
+            payload.next_follow_up_date = new Date(dateStr).toISOString();
+
+            // Auto-create a Task for this follow-up
+            fetch('/api/tasks/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    title: `Follow up with company`,
+                    due_date: payload.next_follow_up_date,
+                    lead_id: leadId
+                })
+            });
+        }
+        fetch(`/api/leads/${leadId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        }).then(() => {
+            htmx.trigger('#leads-table-body', 'load');
+        });
+    }
+
+    function loadNotes(leadId) {
+        fetch(`/api/leads/${leadId}/notes`)
+            .then(r => r.json())
+            .then(notes => {
+                const container = document.getElementById('lead-notes-list');
+                container.innerHTML = notes.map(n => `
+                    <div class="bg-brand-bg rounded-lg px-3 py-2 text-sm text-brand-text">
+                        ${n.note_text}
+                        <span class="text-xs text-brand-secondary ml-2">${new Date(n.created_at).toLocaleDateString()}</span>
+                    </div>
+                `).join('') || '<p class="text-xs text-brand-secondary">No notes yet.</p>';
+            });
+    }
+
+    function addNote(leadId) {
+        const input = document.getElementById('new-note-input');
+        if (!input.value.trim()) return;
+        fetch(`/api/leads/${leadId}/notes`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ note_text: input.value })
+        }).then(() => {
+            input.value = '';
+            loadNotes(leadId);
+        });
+    }
+    function exportToCSV() {
+        const status = document.getElementById('filter-status').value;
+        const pipelineId = document.getElementById('filter-pipeline').value;
+        const searchTerm = document.getElementById('search-leads').value;
+        const assigneeId = document.getElementById('filter-assignee').value;
+        window.location.href = `/api/leads/export?status=${status}&pipeline_id=${pipelineId}&search=${searchTerm}&assigned_user_id=${assigneeId}`;
+    }
+
+    function clearAllFilters() {
+        document.getElementById('filter-status').value = '';
+        document.getElementById('filter-pipeline').value = '';
+        document.getElementById('search-leads').value = '';
+        document.getElementById('filter-assignee').value = '';
+        htmx.trigger('#leads-table-body', 'load');
+    }
+
+    // Populate Pipeline Filter on load
+    document.addEventListener('DOMContentLoaded', () => {
+        // Restore preferred view
+        const savedView = localStorage.getItem('preferredLeadsView') || 'table';
+        switchView(savedView);
+
+        fetchTeam();
+        fetch('/api/pipelines/', { headers: { 'Accept': 'application/json' } })
+            .then(r => r.json())
+            .then(pipelines => {
+                const select = document.getElementById('filter-pipeline');
+                if (select) {
+                    const currentValue = select.value;
+                    select.innerHTML = '<option value="">All Pipelines</option>' + pipelines.map(p =>
+                        `<option value="${p.id}" ${currentValue == p.id ? 'selected' : ''}>${p.name}</option>`
+                    ).join('');
+                }
+            });
+
+        // Populate Assignee Filter
+        fetch('/api/users/')
+            .then(r => r.json())
+            .then(users => {
+                const select = document.getElementById('filter-assignee');
+                if (select) {
+                    const currentValue = select.value;
+                    select.innerHTML = '<option value="">Assignee</option>' + users.map(u =>
+                        `<option value="${u.id}" ${currentValue == u.id ? 'selected' : ''}>${u.full_name || u.email}</option>`
+                    ).join('');
+                }
+            });
+    });
+
+    function toggleAllLeads(source) {
+        const checkboxes = document.querySelectorAll('.lead-checkbox');
+        checkboxes.forEach(cb => cb.checked = source.checked);
+        updateBulkBar();
+    }
+
+    function updateBulkBar() {
+        const selected = document.querySelectorAll('.lead-checkbox:checked');
+        const bar = document.getElementById('bulk-actions-bar');
+        const countEl = document.getElementById('selected-count');
+
+        if (selected.length > 0) {
+            countEl.textContent = selected.length;
+            bar.classList.remove('hidden');
+            // Small timeout to allow transition after un-hiding from display: none
+            setTimeout(() => {
+                bar.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-4');
+            }, 10);
+        } else {
+            bar.classList.add('opacity-0', 'pointer-events-none', 'translate-y-4');
+            // Wait for transition to finish before hiding it from layout
+            setTimeout(() => {
+                if (document.querySelectorAll('.lead-checkbox:checked').length === 0) {
+                    bar.classList.add('hidden');
+                }
+            }, 300);
+        }
+    }
+
+    function clearSelection() {
+        document.getElementById('select-all-leads').checked = false;
+        document.querySelectorAll('.lead-checkbox').forEach(cb => cb.checked = false);
+        updateBulkBar();
+    }
+
+    function applyBulkStatus() {
+        const selected = document.querySelectorAll('.lead-checkbox:checked');
+        const leadIds = Array.from(selected).map(cb => parseInt(cb.value));
+        const status = document.getElementById('bulk-status-select').value;
+
+        if (!confirm(`Are you sure you want to move ${leadIds.length} leads to '${status}'?`)) return;
+
+        fetch('/api/leads/bulk-status', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ lead_ids: leadIds, status: status })
+        }).then(r => r.json()).then(data => {
+            clearSelection();
+            htmx.trigger('#leads-table-body', 'load');
+        });
+    }
+
+    function applyBulkAssign() {
+        const selected = document.querySelectorAll('.lead-checkbox:checked');
+        const leadIds = Array.from(selected).map(cb => parseInt(cb.value));
+        const userId = document.getElementById('bulk-assign-select').value;
+
+        if (!confirm(`Are you sure you want to assign ${leadIds.length} leads?`)) return;
+
+        fetch('/api/leads/bulk-assign', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ lead_ids: leadIds, assigned_user_id: userId ? parseInt(userId) : null })
+        }).then(r => r.json()).then(data => {
+            clearSelection();
+            htmx.trigger('#leads-table-body', 'load');
+        });
+    }
+
+    // Modal Handling
+    function openAddLeadModal() {
+        document.getElementById('add-lead-modal').classList.remove('hidden');
+
+        // Fetch pipelines to populate select dropdown
+        fetch('/api/pipelines/', {
+            headers: { 'Accept': 'application/json' }
+        })
+            .then(r => r.json())
+            .then(pipelines => {
+                const select = document.getElementById('modal-pipeline-select');
+                select.innerHTML = '<option value="">Select a Pipeline</option>' + pipelines.map(p =>
+                    `<option value="${p.id}">${p.name}</option>`
+                ).join('');
+            });
+    }
+
+    function closeAddLeadModal() {
+        document.getElementById('add-lead-modal').classList.add('hidden');
+        document.getElementById('add-lead-form').reset();
+    }
+
+    document.getElementById('add-lead-form').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        const submitData = {};
+
+        formData.forEach((value, key) => {
+            if (value.trim() !== '') {
+                if (key === 'pipeline_id' || key === 'assigned_user_id') {
+                    submitData[key] = parseInt(value);
+                } else {
+                    submitData[key] = value;
+                }
+            }
+        });
+
+        fetch('/api/leads/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(submitData)
+        })
+            .then(res => {
+                if (!res.ok) throw new Error("Failed to save lead");
+                return res.json();
+            })
+            .then(lead => {
+                closeAddLeadModal();
+                htmx.trigger('#leads-table-body', 'load');
+            })
+            .catch(err => {
+                alert('Error adding lead. Please check your required fields and try again.');
+                console.error(err);
+            });
+    });
+
+    // Email Outreach Handling
+    function openEmailModal(leadId, email, companyName) {
+        if (!email) {
+            alert("This lead doesn't have an email address.");
+            return;
+        }
+
+        document.getElementById('email-modal').classList.remove('hidden');
+        document.getElementById('email-lead-id').value = leadId;
+        document.getElementById('email-to').value = email;
+        document.getElementById('email-subject').value = 'Generating...';
+        document.getElementById('email-body').value = 'Generating smart template based on AI gaps...';
+        document.getElementById('email-modal-subtitle').innerHTML = `Drafting to <span class="font-bold">${companyName}</span>`;
+
+        // Fetch AI Template
+        fetch(`/api/leads/${leadId}/email-template`)
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById('email-subject').value = data.subject;
+                document.getElementById('email-body').value = data.body;
+            })
+            .catch(err => {
+                document.getElementById('email-subject').value = '';
+                document.getElementById('email-body').value = '';
+                console.error("Failed to generate template", err);
+            });
+    }
+
+    function closeEmailModal() {
+        document.getElementById('email-modal').classList.add('hidden');
+    }
+
+    function sendEmail() {
+        const leadId = document.getElementById('email-lead-id').value;
+        const subject = document.getElementById('email-subject').value;
+        const body = document.getElementById('email-body').value;
+        const to = document.getElementById('email-to').value;
+
+        if (!subject || !body) return;
+
+        // Open default mail client
+        const mailtoLink = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        window.open(mailtoLink, '_blank');
+
+        // Log the activity natively
+        fetch(`/api/leads/${leadId}/activities`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                activity_type: 'Email Sent',
+                description: `Subject: ${subject}`
+            })
+        });
+    }
+
+    function fetchCampaigns() {
+        fetch('/api/campaigns/', { headers: { 'Accept': 'application/json' } })
+            .then(res => res.json())
+            .then(campaigns => {
+                const bulkSelect = document.getElementById('bulk-campaign-select');
+                if (bulkSelect) {
+                    bulkSelect.innerHTML = '<option value="">Select Sequence</option>' + campaigns.map(c =>
+                        `<option value="${c.id}" class="text-brand-text">${c.name}</option>`
+                    ).join('');
+                }
+            });
+    }
+
+    function applyBulkCampaign() {
+        const selected = document.querySelectorAll('.lead-checkbox:checked');
+        const leadIds = Array.from(selected).map(cb => parseInt(cb.value));
+        const campaignId = document.getElementById('bulk-campaign-select').value;
+
+        if (!campaignId) {
+            alert("Please select an automation sequence first.");
+            return;
+        }
+
+        if (!confirm(`Are you sure you want to enroll ${leadIds.length} leads into this outreach sequence?`)) return;
+
+        fetch('/api/campaigns/add-leads', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ lead_ids: leadIds, campaign_id: parseInt(campaignId) })
+        }).then(r => {
+            if (!r.ok) throw new Error("Enrollment failed");
+            return r.json();
+        }).then(data => {
+            alert(data.detail);
+            clearSelection();
+            htmx.trigger('#leads-table-body', 'load');
+        }).catch(err => {
+            alert(err.message);
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        fetchCampaigns();
+    });
+</script>
+{% endblock %}
