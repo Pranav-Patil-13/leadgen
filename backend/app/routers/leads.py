@@ -25,7 +25,7 @@ templates = Jinja2Templates(directory="templates")
 @router.get("/activities", response_model=Union[List[LeadActivityOut], Any])
 async def list_all_activities(
     request: Request,
-    limit: int = 50,
+    limit: int = 500,
     db: AsyncSession = Depends(get_db)
 ):
     """Get the global activity timeline."""
@@ -55,7 +55,7 @@ async def list_leads(
     search: Optional[str] = None,
     assigned_user_id: Optional[Union[int, str]] = Query(None),
     skip: int = 0,
-    limit: int = 50,
+    limit: int = 5000,
     view: Optional[str] = Query(None), # table or board
     db: AsyncSession = Depends(get_db)
 ):
