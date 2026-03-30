@@ -316,7 +316,16 @@ async def is_duplicate(session: AsyncSession, company_name: str, website: str = 
 @celery_app.task(name="run_pipeline")
 def run_pipeline_task(pipeline_id: int):
     """Celery task to run a specific pipeline."""
-    return asyncio.run(process_pipeline(pipeline_id))
+    from app.core.database import engine
+    
+    async def _runner():
+        try:
+            return await process_pipeline(pipeline_id)
+        finally:
+            # Drop the engine state globally to prevent cross-event-loop sqlite locking
+            await engine.dispose()
+
+    return asyncio.run(_runner())
 
 async def process_pipeline(pipeline_id: int):
     """Async logic to process a pipeline."""

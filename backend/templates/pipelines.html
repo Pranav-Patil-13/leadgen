@@ -231,6 +231,7 @@
         fetch(url, {
             method: method,
             headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
             body: JSON.stringify(data)
         })
             .then(r => {
@@ -250,7 +251,7 @@
 
     function deletePipeline(id) {
         if (!confirm('Are you sure you want to permanently delete this discovery pipeline? All historical run data for this specific configuration will be lost.')) return;
-        fetch(`/api/pipelines/${id}`, { method: 'DELETE' })
+        fetch(`/api/pipelines/${id}`, { method: 'DELETE', credentials: 'same-origin' })
             .then(r => {
                 if (!r.ok) throw new Error('Delete failed');
                 htmx.trigger('#pipelines-grid', 'load');
@@ -262,6 +263,7 @@
         fetch(`/api/pipelines/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
             body: JSON.stringify({ is_active: newState })
         }).then(() => {
             // No need to reload entire grid to avoid flickering, 
@@ -275,7 +277,7 @@
         btn.innerHTML = '<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> Running Engine...';
         btn.disabled = true;
 
-        fetch(`/api/pipelines/${id}/run`, { method: 'POST' })
+        fetch(`/api/pipelines/${id}/run`, { method: 'POST', credentials: 'same-origin' })
             .then(r => {
                 if (!r.ok) throw new Error('Server error starting scraper');
                 return r.json();
