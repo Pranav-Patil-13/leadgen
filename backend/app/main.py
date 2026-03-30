@@ -1,3 +1,13 @@
+import os
+import sys
+
+# Calculate and inject the backend folder into sys.path for cross-module accessibility
+current_dir = os.path.dirname(os.path.abspath(__file__))
+# BASE_DIR is the 'backend' folder
+BASE_DIR = os.path.dirname(current_dir)
+if BASE_DIR not in sys.path:
+    sys.path.append(BASE_DIR)
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -37,11 +47,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-import os
-
-# Calculate base directory (backend folder)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Mount static files
 app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
