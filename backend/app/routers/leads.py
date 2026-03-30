@@ -46,7 +46,7 @@ async def list_all_activities(
     return activities
 
 
-@router.get("/", response_model=Union[List[LeadOut], Any])
+@router.get("/", response_model=List[LeadOut])
 async def list_leads(
     request: Request,
     pipeline_id: Optional[Union[int, str]] = Query(None),

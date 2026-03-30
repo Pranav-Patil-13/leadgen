@@ -18,7 +18,7 @@ templates = Jinja2Templates(directory="templates")
 from app.core.security import get_current_user
 from app.models.models import User
 
-@router.get("/", response_model=Union[List[LeadPipelineOut], Any])
+@router.get("/", response_model=List[LeadPipelineOut])
 async def list_pipelines(
     request: Request,
     current_user: User = Depends(get_current_user),
@@ -115,16 +115,15 @@ async def delete_pipeline(
 @router.post("/{pipeline_id}/run", status_code=status.HTTP_202_ACCEPTED)
 async def run_pipeline(
     pipeline_id: int, 
-    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db)
 ):
-    """Triggers the scraper for this pipeline in the background."""
-    from app.services.scraper_tasks import process_pipeline
+    """Triggers the scraper for this pipeline in the background via Celery."""
+    from app.services.scraper_tasks import run_pipeline_task
     pipeline = await db.get(LeadPipeline, pipeline_id)
     if not pipeline:
         raise HTTPException(status_code=404, detail="Pipeline not found")
     
-    # Run the task via FastAPI BackgroundTasks instead of Celery for simplicity
-    background_tasks.add_task(process_pipeline, pipeline_id)
+    # Offload to Celery worker (more reliable for browser automation)
+    run_pipeline_task.delay(pipeline_id)
     
-    return {"status": "Scraping job started", "pipeline": pipeline.name}
+    return {"status": "Scraping job queued", "pipeline": pipeline.name}

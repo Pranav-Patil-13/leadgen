@@ -8,7 +8,10 @@ load_dotenv()
 # Use SQLite for local dev, PostgreSQL for production
 # To use PostgreSQL, set DATABASE_URL in .env:
 #   DATABASE_URL=postgresql+asyncpg://user:pass@localhost:5432/leadgen_crm
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./leadgen.db")
+# BASE_DIR is the 'backend' folder
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DB_PATH = os.path.join(BASE_DIR, "leadgen.db")
+DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite+aiosqlite:///{DB_PATH}")
 
 # Force SSL requirement for cloud Postgres connections to fix Errno 99
 if DATABASE_URL.startswith("postgresql") and "sslmode=" not in DATABASE_URL:
