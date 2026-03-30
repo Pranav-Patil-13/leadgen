@@ -13,7 +13,7 @@ router = APIRouter(prefix="/api/users", tags=["users"])
 class UserSchema(BaseModel):
     id: int
     email: str
-    full_name: str
+    full_name: Optional[str] = None
     is_active: bool
     created_at: datetime
 

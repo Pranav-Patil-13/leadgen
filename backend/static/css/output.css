@@ -728,6 +728,10 @@ video {
   top: 2rem;
 }
 
+.right-12 {
+  right: 3rem;
+}
+
 .z-10 {
   z-index: 10;
 }
@@ -1205,6 +1209,17 @@ video {
   animation: spin 1s linear infinite;
 }
 
+@keyframes ping {
+  75%, 100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+.animate-ping {
+  animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
 .cursor-not-allowed {
   cursor: not-allowed;
 }
@@ -1297,6 +1312,10 @@ video {
 
 .gap-px {
   gap: 1px;
+}
+
+.gap-2\.5 {
+  gap: 0.625rem;
 }
 
 .-space-x-3 > :not([hidden]) ~ :not([hidden]) {
@@ -2433,6 +2452,10 @@ video {
 
 .opacity-80 {
   opacity: 0.8;
+}
+
+.opacity-75 {
+  opacity: 0.75;
 }
 
 .shadow-2xl {
