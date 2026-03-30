@@ -696,6 +696,10 @@ video {
   right: 0px;
 }
 
+.right-12 {
+  right: 3rem;
+}
+
 .right-4 {
   right: 1rem;
 }
@@ -726,10 +730,6 @@ video {
 
 .top-8 {
   top: 2rem;
-}
-
-.right-12 {
-  right: 3rem;
 }
 
 .z-10 {
@@ -1189,6 +1189,17 @@ video {
   transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
 }
 
+@keyframes ping {
+  75%, 100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+.animate-ping {
+  animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
 @keyframes pulse {
   50% {
     opacity: .5;
@@ -1207,17 +1218,6 @@ video {
 
 .animate-spin {
   animation: spin 1s linear infinite;
-}
-
-@keyframes ping {
-  75%, 100% {
-    transform: scale(2);
-    opacity: 0;
-  }
-}
-
-.animate-ping {
-  animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
 }
 
 .cursor-not-allowed {
@@ -1294,6 +1294,10 @@ video {
   gap: 0.5rem;
 }
 
+.gap-2\.5 {
+  gap: 0.625rem;
+}
+
 .gap-3 {
   gap: 0.75rem;
 }
@@ -1312,10 +1316,6 @@ video {
 
 .gap-px {
   gap: 1px;
-}
-
-.gap-2\.5 {
-  gap: 0.625rem;
 }
 
 .-space-x-3 > :not([hidden]) ~ :not([hidden]) {
@@ -2450,12 +2450,12 @@ video {
   opacity: 0.7;
 }
 
-.opacity-80 {
-  opacity: 0.8;
-}
-
 .opacity-75 {
   opacity: 0.75;
+}
+
+.opacity-80 {
+  opacity: 0.8;
 }
 
 .shadow-2xl {

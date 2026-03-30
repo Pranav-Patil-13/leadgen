@@ -1,12 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from typing import List
+from typing import List, Optional
+from datetime import datetime
+from pydantic import BaseModel
+
 from app.core.database import get_db
 from app.models.models import User, UserSettings
 from app.core.security import get_current_user
-from pydantic import BaseModel
-from datetime import datetime
 
 router = APIRouter(prefix="/api/users", tags=["users"])
 
@@ -14,13 +15,11 @@ class UserSchema(BaseModel):
     id: int
     email: str
     full_name: Optional[str] = None
-    is_active: bool
-    created_at: datetime
+    is_active: Optional[bool] = True
+    created_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True
-
-from typing import Optional
 
 class UserSettingsUpdate(BaseModel):
     sender_name: Optional[str] = None
