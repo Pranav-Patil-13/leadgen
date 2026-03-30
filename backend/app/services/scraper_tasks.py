@@ -125,12 +125,13 @@ async def search_google_maps(industry: str, location: str, min_rating: Any = 0, 
                 # Name is usually in a div with specific font classes or aria-label
                 name = await card.get_attribute('aria-label')
                 if not name:
-                    # Try finding it in text if aria-label is missing
-                    name_el = await card.query_selector('.fontHeadlineSmall')
-                    if name_el:
-                        name = await name_el.inner_text()
-                
-                if not name:
+                    continue
+
+                # Negative Keyword Filter: Skip if business is a software/tech company
+                # Rationale: User specifically wants to avoid targeting their own industry
+                negative_keywords = ['software', 'it services', 'solutions', 'digital agency', 'web design', 'tech']
+                if any(kw in name.lower() for kw in negative_keywords):
+                    print(f"DEBUG: Skipping potential competitor: {name}")
                     continue
 
                 # Rating parsing - more robust

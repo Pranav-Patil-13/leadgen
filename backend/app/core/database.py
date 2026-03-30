@@ -10,6 +10,11 @@ load_dotenv()
 #   DATABASE_URL=postgresql+asyncpg://user:pass@localhost:5432/leadgen_crm
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./leadgen.db")
 
+# Force SSL requirement for cloud Postgres connections to fix Errno 99
+if DATABASE_URL.startswith("postgresql") and "sslmode=" not in DATABASE_URL:
+    sep = "&" if "?" in DATABASE_URL else "?"
+    DATABASE_URL += f"{sep}sslmode=require"
+
 # Engine configuration (SSL is required for production cloud databases like Supabase)
 engine = create_async_engine(
     DATABASE_URL, 
