@@ -18,7 +18,7 @@ from datetime import datetime, date
 from app.core.database import engine, Base
 from app.core.security import get_current_user
 from app.models.models import User
-from app.routers import leads, pipelines, notes, auth, users, campaigns, tasks
+from app.routers import leads, pipelines, notes, auth, users, campaigns, tasks, webhooks
 from fastapi.responses import RedirectResponse
 from fastapi import Depends
 
@@ -62,6 +62,7 @@ app.include_router(notes.router)
 app.include_router(users.router)
 app.include_router(campaigns.router)
 app.include_router(tasks.router)
+app.include_router(webhooks.router)
 
 
 # --- HTMX Page Routes ---
